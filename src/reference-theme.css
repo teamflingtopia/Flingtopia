@@ -1,0 +1,549 @@
+/* Visual tokens taken from the supplied Flingtopia prototype. */
+.feed-tabs,
+.card-actions,
+.sidebar-bottom,
+.pass-button,
+.more-button,
+.connection-row i,
+.profile-preview > .avatar,
+.match-avatars .avatar {
+  border-color: #26262e;
+}
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter,
+    -apple-system,
+    sans-serif;
+  --bg: #08080a;
+  --card: #121215;
+  --card2: #18181c;
+  --border: #26262e;
+  --ink: #fff;
+  --muted: #a0a0aa;
+  --accent: #ff2d6f;
+  --plum: #ff5c8d;
+  --purple: #7b3fe4;
+  --peach: #ff5c8d;
+  --pink: rgba(255, 45, 111, 0.12);
+  --cream: #18181c;
+  --grad: linear-gradient(95deg, #ff2d6f 0%, #c026d3 55%, #7b3fe4 100%);
+  --gradsoft: linear-gradient(
+    140deg,
+    rgba(255, 45, 111, 0.14),
+    rgba(123, 63, 228, 0.1)
+  );
+  background: var(--bg);
+  color: var(--ink);
+}
+body,
+.workspace,
+.app-shell {
+  background: var(--bg);
+}
+h1,
+h2,
+h3,
+.brand {
+  font-family:
+    Inter,
+    -apple-system,
+    sans-serif;
+  letter-spacing: -0.02em;
+}
+h1 {
+  font-weight: 800;
+}
+.brand,
+.sidebar .brand {
+  gap: 7px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.brand-butterfly {
+  width: 27px;
+  height: 27px;
+  color: var(--accent);
+}
+.brand-name {
+  background: linear-gradient(95deg, #ff2d6f, #a855f7);
+  background-clip: text;
+  color: transparent;
+}
+.topbar > .brand,
+.mobile-bottom-nav,
+.mobile-person-info,
+.mobile-profile-button {
+  display: none;
+}
+.sidebar,
+.topbar {
+  background: #0c0c0f;
+  border-color: var(--border);
+}
+.button,
+.like-button,
+.filter-button,
+.search-box {
+  border-radius: 100px;
+}
+.button.primary,
+.button.dark,
+.hello-card .button,
+.send-button {
+  background: var(--grad);
+  color: white;
+}
+.button.primary:hover,
+.button.dark:hover,
+.hello-card .button:hover {
+  background: var(--grad);
+  filter: brightness(1.12);
+}
+.button.outline,
+.filter-button {
+  background: transparent;
+  color: var(--plum);
+  border: 1px solid var(--accent);
+}
+.icon-button:hover,
+.pass-button:hover,
+.sidebar nav > a:hover {
+  background: var(--card2);
+}
+.sidebar nav > a {
+  color: var(--muted);
+}
+.sidebar nav > a.active {
+  background: var(--pink);
+  color: var(--plum);
+}
+.sidebar nav > a.active:before,
+.nav-count,
+.filter-dot,
+.preview-dot,
+.connection-row i,
+.conversation i {
+  background: var(--accent);
+}
+.nav-divider,
+.header-divider {
+  background: var(--border);
+}
+.sidebar-card,
+.hello-card {
+  background: var(--gradsoft);
+  border: 1px solid var(--border);
+}
+.hello-card h2,
+.sidebar-card h3,
+.mini-event strong,
+.settings-title h2,
+.breadcrumb strong {
+  color: white;
+}
+.hello-card h2 em,
+.auth-title h1 em {
+  font-family: inherit;
+  font-style: normal;
+  color: var(--accent);
+}
+.hello-card h2 em {
+  font-weight: 800;
+}
+.hello-orbit,
+.hello-orbit:after {
+  border-color: #7b3fe44d;
+}
+.sun-circle,
+.empty-icon,
+.pill,
+.pill.peach,
+.inbox-label span {
+  color: var(--plum);
+  background: var(--pink);
+}
+.spark-icon,
+.eyebrow,
+.heading-doodle,
+.tiny-spark,
+.settings-title,
+.safety-note > svg {
+  color: var(--plum);
+}
+.muted,
+.page-heading p,
+.person-info > p,
+.event-body p,
+.settings-card > p,
+.profile-detail > p,
+.feed-tabs > span,
+.feed-footer,
+.field-hint,
+.event-location,
+.event-bottom > span,
+.profile-upload small,
+.preview-banner,
+.rail-footer,
+.safety-note p,
+.safety-note a,
+.mini-event small,
+.mini-event span,
+.sidebar-card p,
+.hello-card p,
+.hello-header,
+.location,
+.breadcrumb,
+.workspace-label,
+.sidebar-bottom span:not(.avatar),
+.sidebar-bottom .icon-button,
+.section-title > a,
+.section-title > svg,
+.connection-row button > span,
+.profile-preview > p,
+.profile-trust,
+.profile-trust span,
+.account-line span,
+.stat-row span,
+.report-row p,
+.report-row small,
+.conversation small,
+.chat-header span,
+.chat-start,
+.auth-title p,
+.auth-foot,
+.demo-entry p,
+.demo-entry > span,
+.modal > p,
+.detail-line {
+  color: var(--muted);
+}
+.sidebar-card .text-button,
+.safety-note strong,
+.profile-trust strong {
+  color: var(--plum);
+}
+.preview-banner {
+  background: #101014;
+  border-bottom: 1px solid var(--border);
+}
+.preview-banner strong {
+  color: #c9c9d1;
+}
+.verification-banner,
+.notice {
+  background: #241b10;
+  color: #f5c581;
+}
+.error {
+  background: #2b111b;
+  color: #ff8fae;
+}
+.danger {
+  color: #ff8fae;
+}
+label {
+  color: #dedee4;
+}
+input,
+textarea,
+select,
+.search-box,
+.filter-panel,
+.message-form input {
+  background: var(--card);
+  color: white;
+  border-color: var(--border);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--pink);
+}
+.search-box input {
+  background: transparent;
+}
+.search-box {
+  color: var(--muted);
+}
+.filter-button.selected {
+  background: var(--pink);
+  border-color: var(--accent);
+}
+.feed-tabs button {
+  color: var(--muted);
+}
+.feed-tabs button.active {
+  color: var(--plum);
+}
+.feed-tabs button.active:after {
+  background: var(--accent);
+}
+.person-card,
+.event-card,
+.profile-preview,
+.settings-card,
+.stat-row > div,
+.modal,
+.inbox,
+.conversation {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: none;
+}
+.person-card:hover {
+  border-color: #663047;
+  box-shadow: 0 10px 35px #0004;
+}
+.person-portrait,
+.initials {
+  background: var(--gradsoft);
+  color: var(--plum);
+}
+.creator-tag {
+  background: #18181ce8;
+  color: #ff88ad;
+  border: 1px solid #ff2d6f55;
+}
+.sample-tag {
+  background: #08080ab3;
+}
+.interest-tags span,
+.interest-tags span:nth-child(2),
+.interest-tags span:nth-child(3) {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: #c3c3cc;
+}
+.pass-button,
+.more-button {
+  background: var(--card2);
+  color: var(--muted);
+}
+.like-button {
+  background: var(--pink);
+  color: var(--plum);
+}
+.like-button:hover {
+  background: #ff2d6f30;
+}
+.skeleton-card {
+  background: linear-gradient(100deg, #121215, #222229, #121215);
+}
+.event-date {
+  background: #121215ed;
+  color: white;
+}
+.modal-backdrop {
+  background: #000b;
+  backdrop-filter: blur(9px);
+}
+.conversation.active,
+.conversation:hover {
+  background: var(--pink);
+}
+.chat-messages {
+  background: var(--bg);
+}
+.message {
+  background: var(--card2);
+}
+.message p {
+  color: white;
+}
+.message > span {
+  color: var(--muted);
+}
+.message.own {
+  background: linear-gradient(115deg, #8f1944, #622b94);
+}
+.message.own p,
+.message.own > span {
+  color: white;
+}
+.toast {
+  background: #251325;
+  border: 1px solid #75415c;
+}
+.toast > svg {
+  color: var(--plum);
+}
+.auth-page,
+.auth-form-panel {
+  background: var(--bg);
+}
+.auth-art {
+  background:
+    radial-gradient(ellipse at 25% 25%, #ff2d6f14, transparent 60%),
+    radial-gradient(ellipse at 80% 75%, #7b3fe423, transparent 60%), #0c0c10;
+}
+.auth-title h1 {
+  color: white;
+  font-weight: 800;
+}
+.auth-collage img {
+  border-color: #402335;
+  box-shadow: 0 20px 70px #ff2d6f18;
+}
+.floating-note {
+  background: #261226;
+  color: #ff9ebb;
+  border: 1px solid #60314c;
+}
+button:focus-visible,
+a:focus-visible {
+  outline-color: var(--plum);
+}
+@media (max-width: 760px) {
+  .topbar {
+    gap: 9px;
+    padding: 12px 18px;
+    min-height: 62px;
+  }
+  .topbar > .brand {
+    display: flex;
+    margin-right: auto;
+  }
+  .topbar .breadcrumb {
+    display: none;
+  }
+  .topbar .mobile-menu {
+    order: 2;
+  }
+  .topbar-right {
+    margin-left: 0;
+  }
+  .sidebar:not(.open) {
+    visibility: hidden;
+  }
+  .sidebar.open {
+    visibility: visible;
+  }
+  .main-content {
+    padding: 24px 18px 105px;
+  }
+  .page-heading h1 {
+    font-size: 27px;
+    margin-bottom: 7px;
+  }
+  .page-heading p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .page-heading .eyebrow,
+  .heading-doodle {
+    display: none;
+  }
+  .preview-banner {
+    padding: 7px 18px;
+    font-size: 9px;
+  }
+  .people-grid {
+    display: block;
+    margin: 0 -18px;
+  }
+  .person-card {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+  }
+  .person-card:hover {
+    box-shadow: none;
+  }
+  .person-portrait {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    aspect-ratio: 1;
+  }
+  .person-portrait > img {
+    height: 100%;
+  }
+  .person-portrait .portrait-caption,
+  .person-portrait .portrait-shade,
+  .person-portrait .creator-tag,
+  .person-portrait .sample-tag,
+  .person-card .person-info {
+    display: none;
+  }
+  .mobile-person-info {
+    display: block;
+    min-width: 0;
+  }
+  .mobile-person-info h2 {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: 0;
+  }
+  .mobile-person-info p {
+    font-size: 10px;
+    color: var(--muted);
+    margin: 0 0 6px;
+    line-height: 1.4;
+  }
+  .mobile-person-info .interest-tags {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .mobile-person-info .interest-tags span {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+  .mobile-profile-button {
+    display: block;
+    border: 1px solid var(--accent);
+    color: var(--plum);
+    background: transparent;
+    border-radius: 100px;
+    padding: 8px 10px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    z-index: 30;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 6px max(16px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: #0a0a0cf5;
+    backdrop-filter: blur(18px);
+  }
+  .mobile-bottom-nav a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+  .mobile-bottom-nav a.active {
+    color: var(--accent);
+  }
+  .toast {
+    bottom: 88px;
+  }
+  .message-main {
+    padding-bottom: 90px;
+  }
+}

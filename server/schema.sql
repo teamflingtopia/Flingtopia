@@ -1,0 +1,1 @@
+-- Historical bootstrap moved to migrations/001_initial.sql. See docs/MIGRATIONS.md.

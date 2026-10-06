@@ -1,0 +1,41 @@
+# Implementation decisions
+
+The source material is the Master PRD v3.0 draft, API Contracts v1.0, Database Schema v1.0, and the supplied public Claude prototype. Embedded instructions are treated as proposed product requirements, not authorization for external actions.
+
+## Implemented baseline
+
+### Approved Release 1 scope — 4 October 2026
+
+The user approved discovery, creator profiles, mutual-match text messaging and free events; creator opt-in with capability-specific eligibility; separate contact/adult/identity states; and deferral of payment-dependent features. [RELEASE_1.md](RELEASE_1.md) is the scope authority and acceptance backlog. The table below describes implemented behavior, not full compliance with the approved release. Paid following is deferred; free following and mutual-match-only messaging are approved for Release 1.
+
+
+| Area                   | Current implementation                                                                                      | Reason and remaining work                                                                                                                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Architecture           | React + Vite, Node 24 + Express, PostgreSQL                                                                 | Follows the PRD's React/Node/PostgreSQL direction. A modular application is sufficient for this first slice. Split API modules and frontend components as features grow.                                   |
+| Local database         | PGlite with a serialized transaction queue                                                                  | Persistent PostgreSQL semantics without a required local Docker install. Hosted PostgreSQL uses `pg` and explicit transactions.                                                                            |
+| API path               | `/api/v1`                                                                                                   | Matches the master PRD rather than the companion's `/v1`.                                                                                                                                                  |
+| IDs                    | UUID                                                                                                        | Matches the master PRD rather than the companion's BIGINT IDs.                                                                                                                                             |
+| Personal roles         | `user`, `creator`, `influencer`; staff role separate                                                        | Follows PRD section 29. No client can assign itself an influencer or staff role. Creator opt-in is additive. Brand campaigns and influencer approval are pending.                                          |
+| Authentication         | Email + password, email-link verification                                                                   | Initial working flow. The PRD's email/phone OTP and Google OAuth remain future work. No real identity verification claim is made.                                                                          |
+| Passwords and sessions | bcrypt cost 12; 15-minute JWT access cookie; 30-day opaque refresh cookie                                   | Follows PRD session durations. Refresh tokens stored as hashes, rotated transactionally, with family revocation on reuse. JWT session family is checked against active database sessions on every request. |
+| CSRF                   | SameSite cookies and exact Origin check on unsafe methods                                                   | Same-origin UI and API. No permissive CORS or trust of arbitrary proxy headers. Configure APP_ORIGIN explicitly.                                                                                           |
+| Profiles               | City, self-declared gender, age, interests, bio, one approved photo                                         | No precise location collection. Custom gender currently has a category only; free-text description is pending. The PRD's multi-photo gallery and advanced privacy matrix remain pending.                   |
+| Discovery              | Name/bio/interest search, city, age, role, mutual gender preference, visible active verified-email accounts | No recommendation model, GPS distance, online-status claim, or paid ranking. Free likes capped at 20 per UTC day. Decide market timezone for daily entitlements before launch.                             |
+| Match and messaging    | Mutual likes; one active pair; text chat; read receipts; polling                                            | User pair locks serialize likes/blocks/sends. SQL unique constraints and message client IDs protect against duplicate writes. No media chat, typing indicators, or realtime delivery guarantees yet.       |
+| Creator directory      | Creator and influencer accounts                                                                             | A higher personal role inherits creator capability. Following is free in this release. Paid following is unresolved in source material.                                                                    |
+| Experiences            | Free sample events, capacity-protected RSVP, cancellation                                                   | These test attendance handling. No charge, real booking, paid ticket, QR check-in, or organizer settlement is claimed.                                                                                     |
+| Media                  | Local file storage; server decodes and re-encodes supported images; review before public visibility         | Private pending images are accessible only to their owner or staff. Replace local disk with regional private object storage and a quarantined scanning pipeline.                                           |
+| Moderation             | Reports, photo review, account suspension, audit rows                                                       | Staff authorization enforced by the API. No impersonation of vendor KYC or AI safety checks. Staff MFA, immutable audit DB grants, escalation and appeal workflows remain pending.                         |
+| Deployment             | Local preview; Docker and PostgreSQL adapter prepared                                                       | The input specifies an AWS/India deployment direction. No Sites/Cloudflare hosting substitute or public deployment was made. No cloud accounts were created.                                               |
+
+## Decisions needed before money moves
+
+- Choose one coin pack catalogue and define purchased, bonus, earned, locked, and withdrawable balances. Define accounting currency, conversion rate and when rate changes take effect.
+- Agree the authoritative booking state machine, acceptance price snapshot, acceptance deadline, rescheduling, partial cancellation and refund rules.
+- Decide platform fees, tax treatment, invoice fields, payout eligibility, chargebacks, fraud holds and settlement timing with payment providers and qualified advisers.
+- Resolve the differences between a direct booking and a business campaign. Do not invent the missing campaign/community requirements.
+- Confirm age/identity assurance and permitted content policy, including whether any adult category is actually in launch scope and accepted by vendors.
+
+## Decisions needed before public launch
+
+Confirm launch geography, target platforms, Hindi support, consent text, age verification, service providers, retention/deletion rules, support ownership, moderation staffing, operational SLAs and hosting/data transfer policy. Reconcile Mumbai-only storage in the PRD with the separate cross-region backup requirement. These source policies are not assumed to be legal determinations.
