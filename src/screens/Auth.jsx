@@ -1,5 +1,5 @@
 import { policies } from "../../shared/policies.ts";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import {
   Heart,
@@ -12,20 +12,26 @@ import { api } from "../api.ts";
 
 import { Brand } from "../components/ui.tsx";
 
-export function Auth({ demo, onAuth, notify, emailDisabled }) {
+export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = [] }) {
+  const [social, setSocial] = useState(null);
   const [mode, setMode] = useState("login"),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(location.hash === '#social-error' ? 'Social sign-in could not be completed. Please try again.' : '');
+  useEffect(() => {
+    if (location.hash === '#social-complete') {
+      api('/auth/social/pending').then(p => { setSocial(p); setMode(p.existing_account ? 'login' : 'register'); }).catch(e => setError(e.message));
+    }
+  }, []);
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError("");
     const f = Object.fromEntries(new FormData(e.currentTarget));
     try {
-      const r = await api(`/auth/${mode}`, {
+      const r = await api(social ? '/auth/social/complete' : `/auth/${mode}`, {
         method: "POST",
         body:
-          mode === "register"
+          social?.existing_account ? { existing_password: f.password } : mode === "register"
             ? {
                 ...f,
                 terms: f.terms === "on",
@@ -33,10 +39,11 @@ export function Auth({ demo, onAuth, notify, emailDisabled }) {
               }
             : f,
       });
+      if (social) location.hash = '';
       onAuth(r.user);
       if (r.development_verification_url)
         sessionStorage.setItem("ft-dev-verify", r.development_verification_url);
-      if (mode === "register")
+      if (mode === "register" && !social)
         notify(
           r.email_sent === false
             ? r.message
@@ -109,10 +116,14 @@ export function Auth({ demo, onAuth, notify, emailDisabled }) {
               : "A few details, and you’re on your way."}
           </p>
           <form onSubmit={submit} className="stack">
+            {social && <p className="muted">{social.existing_account ? 'An account already uses this email. Enter its password to link your social sign-in.' : 'Complete your profile and choose a backup password for recovery and sensitive account actions. Future sign-ins can use your social account.'}</p>}
             <label>
               Email address
               <input
                 name="email"
+                defaultValue={social?.email || ''}
+                key={social?.email || 'email'}
+                readOnly={!!social}
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
@@ -203,18 +214,23 @@ export function Auth({ demo, onAuth, notify, emailDisabled }) {
                 <LoaderCircle className="spin" size={18} />
               ) : (
                 <>
-                  {mode === "login" ? "Sign in" : "Create account"}
+                  {social?.existing_account ? 'Link account and sign in' : mode === "login" ? "Sign in" : "Create account"}
                   <ArrowRight size={18} />
                 </>
               )}
             </button>
           </form>
+          {!social && socialProviders.length > 0 && <div className="stack" style={{marginTop: '1rem'}}>
+            <p className="muted">Or continue with</p>
+            {socialProviders.map(provider => <a key={provider} className="button outline full" href={`/api/v1/auth/social/${provider}/start`}>Continue with {provider === 'google' ? 'Google' : 'Apple'}</a>)}
+          </div>}
+          {social && <a className="text-button" href="/">Cancel social sign-in</a>}
           {mode === "login" && !emailDisabled && (
             <a className="text-button" href="#forgot-password">
               Forgot password?
             </a>
           )}
-          <p className="switch-auth">
+          {!social && <p className="switch-auth">
             {mode === "login"
               ? "New around here?"
               : "Already part of the community?"}{" "}
@@ -227,7 +243,7 @@ export function Auth({ demo, onAuth, notify, emailDisabled }) {
             >
               {mode === "login" ? "Create an account" : "Sign in"}
             </button>
-          </p>
+          </p>}
           {demo && (
             <div className="demo-entry">
               <span>EXPLORE THE LOCAL PREVIEW</span>

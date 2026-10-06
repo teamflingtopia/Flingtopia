@@ -94,6 +94,7 @@ export function registerAccountRequests(
           likes: await read(
             "SELECT target_id,created_at FROM likes WHERE user_id=$1",
           ),
+          social_sign_ins: await read("SELECT provider,created_at FROM social_identities WHERE user_id=$1"),
           follows: await read("SELECT target_id FROM follows WHERE user_id=$1"),
           blocks: await read("SELECT target_id FROM blocks WHERE user_id=$1"),
           submitted_reports: await read(

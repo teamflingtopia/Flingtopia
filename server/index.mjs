@@ -95,6 +95,10 @@ const appConfig = {
   production,
   staging,
   stagingPublicAccess,
+  social: {
+    google: { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET },
+    apple: { clientId: process.env.APPLE_CLIENT_ID, teamId: process.env.APPLE_TEAM_ID, keyId: process.env.APPLE_KEY_ID, privateKey: process.env.APPLE_PRIVATE_KEY },
+  },
   emailDisabled,
   stagingAccessPassword: process.env.STAGING_ACCESS_PASSWORD,
   // Enable only behind the documented single trusted proxy deployment.

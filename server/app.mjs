@@ -21,6 +21,7 @@ import { timingSafeEqual } from "node:crypto";
 import { hash, fail, cleanUser, privateUser, age } from "./domain.mjs";
 export { hash, age } from "./domain.mjs";
 import { registerAuth } from "./routes/auth.mjs";
+import { registerSocialAuth, socialProviders } from "./social-auth.mjs";
 import { registerProfiles } from "./routes/profiles.mjs";
 import { registerDiscovery } from "./routes/discovery.mjs";
 import { registerMessages } from "./routes/messages.mjs";
@@ -104,6 +105,7 @@ export function createApp(db, config) {
     res.set("X-Request-ID", req.requestId);
     if (
       !["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+      !(req.method === "POST" && req.path === "/api/v1/auth/social/apple/callback") &&
       req.get("origin") !== config.origin
     )
       return next(fail(403, "Request origin is not allowed.", "FORBIDDEN"));
@@ -307,6 +309,7 @@ export function createApp(db, config) {
       demo: config.demo,
       staging: !!config.staging,
       email_disabled: !!config.emailDisabled,
+      social_providers: socialProviders(config),
       policies,
       operations: {
         event_publisher_roles: config.eventPublisherRoles || [],
@@ -331,6 +334,7 @@ export function createApp(db, config) {
   registerPhotos(app, operations);
   registerEventOperations(app, operations);
   registerAccountRequests(app, operations);
+  registerSocialAuth(app, { db, config, one, audit, issueSession, authLimit, getCookies, sendVerification });
   registerAuth(app, {
     accountLimit,
     db,

@@ -302,6 +302,7 @@ export function App() {
         />
       ) : !user ? (
         <Auth
+          socialProviders={config?.social_providers || []}
           emailDisabled={config?.email_disabled}
           demo={config?.demo}
           onAuth={(u) => {

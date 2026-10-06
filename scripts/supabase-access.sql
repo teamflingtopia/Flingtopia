@@ -16,7 +16,7 @@ BEGIN
     'follows','blocks','reports','events','rsvps','audit_log','user_consents',
     'password_reset_tokens','recovery_mail','request_limits','staff_mfa',
     'staff_stepups','profile_photos','account_requests','notifications','notification_mail',
-    'schema_versions','app_migrations'
+    'schema_versions','app_migrations','social_identities','social_auth_flows'
   ] LOOP
     EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC, anon, authenticated', t);
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
