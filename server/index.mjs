@@ -18,6 +18,11 @@ try {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const production = process.env.NODE_ENV === "production";
 const staging = process.env.APP_ENV === "staging";
+const emailDisabled = process.env.STAGING_DISABLE_EMAIL === "true";
+if (emailDisabled && !staging)
+  throw new Error(
+    "STAGING_DISABLE_EMAIL is allowed only with APP_ENV=staging.",
+  );
 if (
   staging &&
   (!production || (process.env.STAGING_ACCESS_PASSWORD || "").length < 24)
@@ -36,8 +41,9 @@ if (
   (!process.env.DATABASE_URL ||
     !process.env.JWT_SECRET ||
     process.env.JWT_SECRET.length < 32 ||
-    !(process.env.SMTP_HOST || process.env.RESEND_API_KEY) ||
-    !process.env.MAIL_FROM ||
+    (!emailDisabled &&
+      (!(process.env.SMTP_HOST || process.env.RESEND_API_KEY) ||
+        !process.env.MAIL_FROM)) ||
     !process.env.MFA_ENCRYPTION_KEY ||
     process.env.MFA_ENCRYPTION_KEY.length < 32 ||
     !process.env.APP_ORIGIN?.startsWith("https://") ||
@@ -85,6 +91,7 @@ const appConfig = {
   mfaSecret: process.env.MFA_ENCRYPTION_KEY || secret,
   production,
   staging,
+  emailDisabled,
   stagingAccessPassword: process.env.STAGING_ACCESS_PASSWORD,
   // Enable only behind the documented single trusted proxy deployment.
   trustProxy: process.env.TRUST_PROXY_HOPS === "1" ? 1 : false,

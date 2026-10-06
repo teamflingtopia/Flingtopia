@@ -1,7 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { api } from "../api.ts";
 import { policies } from "../../shared/policies.ts";
-export function Onboarding({ user, setUser, verifyEmail, logout, notify }) {
+export function Onboarding({
+  user,
+  setUser,
+  verifyEmail,
+  logout,
+  notify,
+  emailDisabled,
+}) {
   const [draft, setDraft] = useState(() => ({
     display_name: user.display_name,
     city: user.city,
@@ -114,7 +121,11 @@ export function Onboarding({ user, setUser, verifyEmail, logout, notify }) {
             Confirm your email before finishing. Email confirmation does not
             verify your age or identity.
           </p>
-          <button className="button outline" onClick={verifyEmail}>
+          <button
+            className="button outline"
+            disabled={emailDisabled}
+            onClick={verifyEmail}
+          >
             Verify / resend email
           </button>
           <button

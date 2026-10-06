@@ -212,6 +212,10 @@ export function App() {
     }
   }
   async function verifyEmail() {
+    if (config?.email_disabled) {
+      notify("Email verification is unavailable in this staging environment.");
+      return;
+    }
     try {
       const link = sessionStorage.getItem("ft-dev-verify");
       if (link) {
@@ -277,8 +281,17 @@ export function App() {
   const common = { user, notify, reload, operations: config?.operations };
   return (
     <>
+      {config?.email_disabled && (
+        <div className="staging-notice" role="status">
+          Staging preview — email is disabled. Verification, password recovery,
+          and cancellation emails are unavailable. New accounts can save a
+          profile, but cannot complete onboarding until email verification is
+          available.
+        </div>
+      )}
       {["forgot-password", "reset-password"].includes(route) ? (
         <Recovery
+          emailDisabled={config?.email_disabled}
           key={destination}
           reset={route === "reset-password"}
           onReset={() => {
@@ -289,6 +302,7 @@ export function App() {
         />
       ) : !user ? (
         <Auth
+          emailDisabled={config?.email_disabled}
           demo={config?.demo}
           onAuth={(u) => {
             setUser(u);
@@ -300,6 +314,7 @@ export function App() {
       ) : !user.onboarding_completed && !user.is_demo ? (
         <>
           <Onboarding
+            emailDisabled={config?.email_disabled}
             key={user.id}
             user={user}
             setUser={setUser}
@@ -460,7 +475,11 @@ export function App() {
                 <span>
                   Verify your email to like, message, and join experiences.
                 </span>
-                <button className="text-button" onClick={verifyEmail}>
+                <button
+                  className="text-button"
+                  disabled={config?.email_disabled}
+                  onClick={verifyEmail}
+                >
                   {config?.demo
                     ? "Verify email locally"
                     : "Resend verification"}

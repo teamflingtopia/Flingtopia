@@ -39,6 +39,12 @@ export function registerEventOperations(
     staff,
     publisher,
     async (req, res) => {
+      if (config.emailDisabled)
+        throw fail(
+          503,
+          "Email delivery is disabled in staging.",
+          "EMAIL_DISABLED",
+        );
       const id = uuid.parse(req.params.id);
       await db.transaction(async (tx) => {
         const result = await tx.query(
@@ -215,7 +221,7 @@ export function registerEventOperations(
             ],
             tx,
           );
-          if (notification)
+          if (notification && !config.emailDisabled)
             await tx.query(
               "INSERT INTO notification_mail(id,notification_id) VALUES($1,$2)",
               [randomUUID(), notification.id],

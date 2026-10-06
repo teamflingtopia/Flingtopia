@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { api } from "../api.ts";
 import { Brand } from "../components/ui.tsx";
 import { navigate, routeQuery } from "../routing.ts";
-export function Recovery({ reset, onReset }) {
+export function Recovery({ reset, onReset, emailDisabled }) {
   const [token] = useState(() => routeQuery().get("token") || "");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -37,7 +37,11 @@ export function Recovery({ reset, onReset }) {
       <Brand />
       <section className="settings-card stack recovery-card">
         <h1>{reset ? "Choose a new password" : "Recover your account"}</h1>
-        {done ? (
+        {emailDisabled ? (
+          <p role="status">
+            Password recovery is unavailable while email is disabled in staging.
+          </p>
+        ) : done ? (
           <p role="status">
             {reset
               ? "Password updated. All existing sessions have been signed out. Sign in with your new password."

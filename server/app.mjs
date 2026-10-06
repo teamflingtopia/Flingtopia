@@ -254,6 +254,12 @@ export function createApp(db, config) {
     return m;
   }
   async function sendVerification(user) {
+    if (config.emailDisabled)
+      return {
+        email_sent: false,
+        message:
+          "Account saved. Email verification is unavailable in this staging environment. Your account remains unverified.",
+      };
     const token = randomBytes(32).toString("hex");
     await db.query(
       "INSERT INTO email_tokens(id,user_id,token_hash,expires_at) VALUES($1,$2,$3,$4)",
@@ -292,6 +298,8 @@ export function createApp(db, config) {
   app.get("/api/v1/config", (req, res) =>
     res.json({
       demo: config.demo,
+      staging: !!config.staging,
+      email_disabled: !!config.emailDisabled,
       policies,
       operations: {
         event_publisher_roles: config.eventPublisherRoles || [],

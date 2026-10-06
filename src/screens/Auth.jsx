@@ -12,7 +12,7 @@ import { api } from "../api.ts";
 
 import { Brand } from "../components/ui.tsx";
 
-export function Auth({ demo, onAuth, notify }) {
+export function Auth({ demo, onAuth, notify, emailDisabled }) {
   const [mode, setMode] = useState("login"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -209,7 +209,7 @@ export function Auth({ demo, onAuth, notify }) {
               )}
             </button>
           </form>
-          {mode === "login" && (
+          {mode === "login" && !emailDisabled && (
             <a className="text-button" href="#forgot-password">
               Forgot password?
             </a>

@@ -2,6 +2,17 @@ import nodemailer from "nodemailer";
 
 // One transport for verification and both durable queues. Never log provider bodies.
 export function createMailTransport(config) {
+  if (config.emailDisabled) {
+    if (
+      !config.staging ||
+      !config.production ||
+      (config.stagingAccessPassword || "").length < 24
+    )
+      throw new Error(
+        "Disabling email requires password-protected hosted staging.",
+      );
+    return null;
+  }
   if (config.resendApiKey)
     return {
       async sendMail(message) {

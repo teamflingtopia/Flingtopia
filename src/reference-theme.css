@@ -547,3 +547,27 @@ a:focus-visible {
     padding-bottom: 90px;
   }
 }
+
+/* Keep the staging limitation visible above fixed navigation. */
+.staging-notice {
+  position: relative;
+  z-index: 100;
+  padding: 12px 20px;
+  background: #fff3cd;
+  color: #513c06;
+  border-bottom: 1px solid #d6ba67;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (min-width: 761px) {
+  .staging-notice ~ .app-shell .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+  }
+  .staging-notice ~ .app-shell .workspace {
+    margin-left: 0;
+  }
+}

@@ -38,6 +38,12 @@ export function registerRecovery(
   { db, config, authLimit, one, audit, cookieOpts },
 ) {
   app.post("/api/v1/auth/forgot-password", authLimit, async (req, res) => {
+    if (config.emailDisabled)
+      throw fail(
+        503,
+        "Password recovery is unavailable while email is disabled in staging.",
+        "EMAIL_DISABLED",
+      );
     const { email } = recoverySchema.parse(req.body);
     const token = randomBytes(32).toString("hex");
     const expires = new Date(Date.now() + 30 * 60000);
@@ -86,6 +92,12 @@ export function registerRecovery(
     });
   });
   app.post("/api/v1/auth/reset-password", authLimit, async (req, res) => {
+    if (config.emailDisabled)
+      throw fail(
+        503,
+        "Password recovery is unavailable while email is disabled in staging.",
+        "EMAIL_DISABLED",
+      );
     const input = resetSchema.parse(req.body);
     if (Buffer.byteLength(input.password, "utf8") > 72)
       throw fail(400, "Password must fit within 72 UTF-8 bytes.");
