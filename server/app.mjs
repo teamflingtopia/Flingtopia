@@ -31,6 +31,15 @@ export function createApp(db, config) {
   if (config.trustProxy) app.set("trust proxy", config.trustProxy);
   app.disable("x-powered-by");
   if (config.staging) {
+    if (config.stagingPublicAccess && config.emailDisabled)
+      throw new Error("Public staging requires email to be enabled.");
+    app.use((req, res, next) => {
+      res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+      res.set("Cache-Control", "private, no-store");
+      next();
+    });
+  }
+  if (config.staging && !config.stagingPublicAccess) {
     if (
       !config.stagingAccessPassword ||
       config.stagingAccessPassword.length < 24
@@ -42,8 +51,6 @@ export function createApp(db, config) {
       .update(`staging:${config.stagingAccessPassword}`)
       .digest();
     app.use((req, res, next) => {
-      res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
-      res.set("Cache-Control", "private, no-store");
       if (req.path === "/api/v1/health" && req.method === "GET") return next();
       const header = req.get("authorization") || "";
       const supplied = header.startsWith("Basic ")

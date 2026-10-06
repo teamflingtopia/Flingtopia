@@ -18,14 +18,17 @@ try {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const production = process.env.NODE_ENV === "production";
 const staging = process.env.APP_ENV === "staging";
+const stagingPublicAccess = staging && process.env.STAGING_PUBLIC_ACCESS === "true";
 const emailDisabled = process.env.STAGING_DISABLE_EMAIL === "true";
+if (stagingPublicAccess && emailDisabled)
+  throw new Error("Public staging requires email to be enabled.");
 if (emailDisabled && !staging)
   throw new Error(
     "STAGING_DISABLE_EMAIL is allowed only with APP_ENV=staging.",
   );
 if (
   staging &&
-  (!production || (process.env.STAGING_ACCESS_PASSWORD || "").length < 24)
+  (!production || (!stagingPublicAccess && (process.env.STAGING_ACCESS_PASSWORD || "").length < 24))
 )
   throw new Error(
     "Staging requires NODE_ENV=production and STAGING_ACCESS_PASSWORD of at least 24 characters.",
@@ -91,6 +94,7 @@ const appConfig = {
   mfaSecret: process.env.MFA_ENCRYPTION_KEY || secret,
   production,
   staging,
+  stagingPublicAccess,
   emailDisabled,
   stagingAccessPassword: process.env.STAGING_ACCESS_PASSWORD,
   // Enable only behind the documented single trusted proxy deployment.
