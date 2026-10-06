@@ -21,6 +21,7 @@ import { timingSafeEqual } from "node:crypto";
 import { hash, fail, cleanUser, privateUser, age } from "./domain.mjs";
 export { hash, age } from "./domain.mjs";
 import { registerAuth } from "./routes/auth.mjs";
+import { registerPublic } from "./routes/public.mjs";
 import { registerSocialAuth, socialProviders } from "./social-auth.mjs";
 import { registerProfiles } from "./routes/profiles.mjs";
 import { registerDiscovery } from "./routes/discovery.mjs";
@@ -318,6 +319,7 @@ export function createApp(db, config) {
       features: { payments: false, live: false, photo_review: true },
     }),
   );
+  registerPublic(app, { db, config });
   registerRecovery(app, { db, config, authLimit, one, audit, cookieOpts });
   const operations = {
     db,

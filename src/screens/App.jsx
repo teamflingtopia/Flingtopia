@@ -32,6 +32,7 @@ import { api } from "../api.ts";
 import { Avatar, Brand, Spinner, Empty } from "../components/ui.tsx";
 import { routeNames, getRoute, navigate, fmtDate } from "../routing.ts";
 import { Auth } from "./Auth.jsx";
+import { Guest } from "./Guest.jsx";
 import { Discover } from "./Discover.jsx";
 import { Experiences } from "./Experiences.jsx";
 import { Messages } from "./Messages.jsx";
@@ -300,14 +301,17 @@ export function App() {
             setEvents([]);
           }}
         />
+      ) : !user && !['signin','signup','social-complete','social-error'].includes(location.hash.slice(1).split('?')[0]) ? (
+        <Guest key={destination} route={route} entityId={entityId} />
       ) : !user ? (
         <Auth
+          key={destination}
           socialProviders={config?.social_providers || []}
           emailDisabled={config?.email_disabled}
           demo={config?.demo}
           onAuth={(u) => {
             setUser(u);
-            if (!location.hash || route === "unavailable")
+            if (!location.hash || ['unavailable','signin','signup'].includes(route))
               navigate(u.staff_role ? "moderation" : "discover");
           }}
           notify={notify}

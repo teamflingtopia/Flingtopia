@@ -14,7 +14,7 @@ import { Brand } from "../components/ui.tsx";
 
 export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = [] }) {
   const [social, setSocial] = useState(null);
-  const [mode, setMode] = useState("login"),
+  const [mode, setMode] = useState(location.hash === '#signup' ? 'register' : 'login'),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(location.hash === '#social-error' ? 'Social sign-in could not be completed. Please try again.' : '');
   useEffect(() => {
@@ -107,6 +107,7 @@ export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = []
       <div className="auth-form-panel">
         <div className="auth-form-wrap">
           <span className="pill peach">LET'S FIND YOUR PEOPLE</span>
+          <a className="text-button" href="#discover">Explore as a guest →</a>
           <h2>
             {mode === "login" ? "Welcome back." : "Make yourself at home."}
           </h2>

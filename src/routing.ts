@@ -1,4 +1,6 @@
 export const routeNames = {
+  signin: "Sign in",
+  signup: "Create account",
   discover: "People",
   creators: "Creators",
   experiences: "Experiences",
