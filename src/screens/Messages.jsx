@@ -4,6 +4,8 @@ import { api } from "../api.ts";
 import { Avatar, Spinner, Empty, Modal } from "../components/ui.tsx";
 import { backToList, openDetail, restoreListView } from "../routing.ts";
 import { ReportModal } from "./ReportModal.jsx";
+import { ConversationSearch } from "../components/ConversationSearch.jsx";
+import { routeQuery, replaceFilters } from "../routing.ts";
 const messageTime = (m) =>
   (m.cursor_time || m.created_at).replace(
     /\.(\d+)Z$/,
@@ -15,6 +17,15 @@ const merge = (previous, incoming) =>
       messageTime(a).localeCompare(messageTime(b)) || a.id.localeCompare(b.id),
   );
 export function Messages({ user, notify, reload, selected, setSelected }) {
+  const [inboxQuery, setInboxQuery] = useState(routeQuery().get("q") || "");
+  const [unreadOnly, setUnreadOnly] = useState(
+    routeQuery().get("unread") === "true",
+  );
+  const [searchOpen, setSearchOpen] = useState(false);
+  useEffect(() => {
+    if (!selected)
+      replaceFilters({ q: inboxQuery, unread: String(unreadOnly) });
+  }, [selected, inboxQuery, unreadOnly]);
   const pendingKey = `ft-pending-message:${user.id}:${selected}`;
   const readPending = () => {
     try {
@@ -216,25 +227,67 @@ export function Messages({ user, notify, reload, selected, setSelected }) {
             </p>
           )}
           {!selected && loading && <Spinner />}
-          {conversations.map((c) => (
-            <button
-              key={c.id}
-              id={`thread-${c.id}`}
-              className={`conversation ${selected === c.id ? "active" : ""}`}
-              disabled={busy}
-              onClick={() => setSelected(c.id)}
-            >
-              <Avatar person={c.person} />
-              <span>
-                <strong>{c.person.display_name}</strong>
-                <small>{c.last_message || "You matched. Say hello!"}</small>
-              </span>
-              {c.unread > 0 && <i>{c.unread}</i>}
-            </button>
-          ))}
+          <div className="stack padded">
+            <label>
+              Search inbox
+              <input
+                type="search"
+                value={inboxQuery}
+                maxLength={100}
+                onChange={(e) => setInboxQuery(e.target.value)}
+                placeholder="Name or latest message"
+              />
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={unreadOnly}
+                onChange={(e) => setUnreadOnly(e.target.checked)}
+              />
+              Unread only
+            </label>
+          </div>
+          {conversations
+            .filter(
+              (c) =>
+                (!unreadOnly || c.unread > 0) &&
+                `${c.person.display_name} ${c.person.username} ${c.last_message || ""}`
+                  .toLowerCase()
+                  .includes(inboxQuery.trim().toLowerCase()),
+            )
+            .map((c) => (
+              <button
+                key={c.id}
+                id={`thread-${c.id}`}
+                className={`conversation ${selected === c.id ? "active" : ""}`}
+                disabled={busy}
+                onClick={() => setSelected(c.id)}
+              >
+                <Avatar person={c.person} />
+                <span>
+                  <strong>{c.person.display_name}</strong>
+                  <small>{c.last_message || "You matched. Say hello!"}</small>
+                </span>
+                {c.unread > 0 && <i>{c.unread}</i>}
+              </button>
+            ))}
           {!loading && !inboxError && !conversations.length && (
             <p className="muted padded">Mutual matches appear here.</p>
           )}
+          {!loading &&
+            !inboxError &&
+            conversations.length > 0 &&
+            !conversations.some(
+              (c) =>
+                (!unreadOnly || c.unread > 0) &&
+                `${c.person.display_name} ${c.person.username} ${c.last_message || ""}`
+                  .toLowerCase()
+                  .includes(inboxQuery.trim().toLowerCase()),
+            ) && (
+              <p className="muted padded">
+                No conversations match these filters.
+              </p>
+            )}
         </aside>
         <div className="chat-panel">
           {selected && (
@@ -261,12 +314,22 @@ export function Messages({ user, notify, reload, selected, setSelected }) {
                   Report
                 </button>
                 <button
+                  className="text-button"
+                  aria-expanded={searchOpen}
+                  onClick={() => setSearchOpen((v) => !v)}
+                >
+                  {searchOpen ? "Close search" : "Search chat"}
+                </button>
+                <button
                   className="text-button danger"
                   onClick={() => setConfirm(true)}
                 >
                   Unmatch
                 </button>
               </header>
+              {searchOpen && (
+                <ConversationSearch key={selected} id={selected} user={user} />
+              )}
               {error && (
                 <p className="error padded" role="alert">
                   {error}

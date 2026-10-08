@@ -5,12 +5,16 @@ export interface PublicPerson {
   id: string;
   display_name: string;
   username: string;
-  age: number;
-  gender: Gender;
+  age: number | null;
+  gender: Gender | null;
   looking_for: Gender | "everyone";
   city: string;
   bio: string;
   interests: string[];
+  custom_gender: string;
+  connection_goals: string[];
+  languages: string[];
+  social_links: Partial<Record<"instagram" | "x" | "tiktok", string>>;
   role: PersonalRole;
   avatar_url: string | null;
   identity_verified: boolean;
@@ -26,7 +30,9 @@ export interface PrivateUser extends PublicPerson {
   onboarding_draft: Partial<import("./validation.ts").ProfileRequest> & {
     step?: "profile" | "preferences" | "review";
   };
-  adult_eligibility: "self_declared";
+  needs_demographics: boolean;
+  has_password: boolean;
+  adult_eligibility: "self_declared" | "unknown";
 }
 export type {
   ProfileRequest as ProfileInput,
@@ -50,6 +56,22 @@ export interface Conversation {
   person: PublicPerson;
   last_message: string | null;
   unread: number;
+}
+export interface SearchResults {
+  people: PublicPerson[];
+  events: Pick<
+    FreeEvent,
+    | "id"
+    | "title"
+    | "description"
+    | "category"
+    | "city"
+    | "starts_at"
+    | "image_url"
+    | "price_inr"
+  >[];
+  next_people_cursor: string | null;
+  next_events_cursor: string | null;
 }
 export interface FreeEvent {
   id: string;

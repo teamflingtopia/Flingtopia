@@ -121,6 +121,28 @@ export function Details({ kind, id, notify, reload, onChat }) {
                 {item.role} · {item.city}
               </p>
               <p>{item.bio}</p>
+              <p>@{item.username}</p>
+              {item.custom_gender && <p>{item.custom_gender}</p>}
+              {!!item.connection_goals?.length && (
+                <p>Looking for: {item.connection_goals.join(", ")}</p>
+              )}
+              {!!item.languages?.length && (
+                <p>Languages: {item.languages.join(", ")}</p>
+              )}
+              <div className="guest-actions">
+                {Object.entries(item.social_links || {})
+                  .filter(([, url]) => url)
+                  .map(([platform, url]) => (
+                    <a
+                      key={platform}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                    >
+                      {platform}
+                    </a>
+                  ))}
+              </div>
               <div className="interest-tags">
                 {item.interests.map((t) => (
                   <span key={t}>{t}</span>

@@ -26,7 +26,12 @@ export function registerAccountRequests(
     (req) => req.user.id,
   );
   async function reauth(req) {
-    if (!req.user.password_hash) throw fail(403, 'Use Forgot password to set an account password before this sensitive action.', 'PASSWORD_REQUIRED');
+    if (!req.user.password_hash)
+      throw fail(
+        403,
+        "Use Forgot password to set an account password before this sensitive action.",
+        "PASSWORD_REQUIRED",
+      );
     const { password } = accountRequestInput.parse(req.body);
     if (!(await bcrypt.compare(password, req.user.password_hash)))
       throw fail(403, "Confirm your current password.", "REAUTH_REQUIRED");
@@ -72,7 +77,7 @@ export function registerAccountRequests(
       const data = await db.transaction(async (tx) => {
         await lockAuthenticatedAccount(tx, req);
         const user = await one(
-          "SELECT id,email,username,display_name,dob,gender,looking_for,city,bio,interests,role,profile_visible,email_verified,created_at FROM users WHERE id=$1 FOR UPDATE",
+          "SELECT id,email,username,display_name,dob,gender,custom_gender,connection_goals,languages,social_links,looking_for,city,bio,interests,role,profile_visible,email_verified,created_at FROM users WHERE id=$1 FOR UPDATE",
           [req.user.id],
           tx,
         );
@@ -95,7 +100,9 @@ export function registerAccountRequests(
           likes: await read(
             "SELECT target_id,created_at FROM likes WHERE user_id=$1",
           ),
-          social_sign_ins: await read("SELECT provider,created_at FROM social_identities WHERE user_id=$1"),
+          social_sign_ins: await read(
+            "SELECT provider,created_at FROM social_identities WHERE user_id=$1",
+          ),
           follows: await read("SELECT target_id FROM follows WHERE user_id=$1"),
           blocks: await read("SELECT target_id FROM blocks WHERE user_id=$1"),
           submitted_reports: await read(

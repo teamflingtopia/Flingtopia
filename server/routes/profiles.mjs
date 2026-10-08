@@ -2,6 +2,7 @@ import {
   onboardingSchema,
   completionSchema,
   creatorSchema,
+  profileDetailsSchema,
 } from "../../shared/validation.ts";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
@@ -35,11 +36,14 @@ export function registerProfiles(app, context) {
           [req.user.id],
           tx,
         );
-        if (u.status !== 'active') throw fail(403, 'Account unavailable.');
+        if (u.status !== "active") throw fail(403, "Account unavailable.");
         const dob = u.dob || b.dob;
         const gender = u.gender || b.gender;
         if (!dob || !gender || age(dob) < 18 || age(dob) > 120)
-          throw fail(400, 'Enter your date of birth and gender. Flingtopia is for adults aged 18 and over.');
+          throw fail(
+            400,
+            "Enter your date of birth and gender. Flingtopia is for adults aged 18 and over.",
+          );
         if (!u.email_verified)
           throw fail(
             403,
@@ -87,6 +91,42 @@ export function registerProfiles(app, context) {
         req.user.id,
       ],
     );
+    res.json({ user: privateUser(u) });
+  });
+  app.patch("/api/v1/me/details", authenticated, async (req, res) => {
+    const b = profileDetailsSchema.parse(req.body);
+    const u = await db.transaction(async (tx) => {
+      const actor = await one(
+        "SELECT id,status,gender FROM users WHERE id=$1 FOR UPDATE",
+        [req.user.id],
+        tx,
+      );
+      if (actor.status !== "active") throw fail(403, "Account unavailable.");
+      if (b.custom_gender && actor.gender !== "custom")
+        throw fail(400, "A self-description applies only to a custom gender.");
+      if (
+        await one(
+          "SELECT id FROM users WHERE username=$1 AND id<>$2",
+          [b.username, actor.id],
+          tx,
+        )
+      )
+        throw fail(409, "This username is already taken.", "USERNAME_TAKEN");
+      const updated = await one(
+        `UPDATE users SET username=$1,custom_gender=$2,connection_goals=$3,languages=$4,social_links=$5::jsonb,updated_at=now() WHERE id=$6 RETURNING *`,
+        [
+          b.username,
+          b.custom_gender,
+          [...new Set(b.connection_goals)],
+          [...new Set(b.languages)],
+          JSON.stringify(b.social_links),
+          actor.id,
+        ],
+        tx,
+      );
+      await audit(tx, actor.id, "profile_details_updated", actor.id);
+      return updated;
+    });
     res.json({ user: privateUser(u) });
   });
   app.post("/api/v1/me/creator", authenticated, verified, async (req, res) => {

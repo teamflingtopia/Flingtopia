@@ -4,7 +4,7 @@ import {
   replaceFilters,
   restoreListView,
 } from "../routing.ts";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
 import {
   MessageCircle,
@@ -42,27 +42,45 @@ export function Discover({
     [error, setError] = useState(""),
     [city, setCity] = useState(initial.get("city") || ""),
     [tab, setTab] = useState(
-      initial.get("tab") === "creators" ? "creators" : "everyone",
+      ["creators", "following"].includes(initial.get("tab"))
+        ? initial.get("tab")
+        : "everyone",
     ),
     [filters, setFilters] = useState(false),
+    [gender, setGender] = useState(initial.get("gender") || "everyone"),
+    [interest, setInterest] = useState(initial.get("interest") || ""),
+    [hasPhotos, setHasPhotos] = useState(initial.get("has_photos") === "true"),
     [min, setMin] = useState(Number(initial.get("min")) || 18),
     [max, setMax] = useState(Number(initial.get("max")) || 65),
     [busy, setBusy] = useState(""),
     [cursor, setCursor] = useState(null),
     [version, setVersion] = useState(0),
     [match, setMatch] = useState(null);
+  const generation = useRef(0);
   const closeMatch = useCallback(() => setMatch(null), []);
   useEffect(() => {
-    replaceFilters({ q: query, city, tab, min, max });
-  }, [query, city, tab, min, max]);
+    replaceFilters({
+      q: query,
+      city,
+      tab,
+      min,
+      max,
+      gender,
+      interest,
+      has_photos: String(hasPhotos),
+    });
+  }, [query, city, tab, min, max, gender, interest, hasPhotos]);
   useEffect(() => {
     let active = true;
+    generation.current++;
+    setLoading(true);
+    setCursor(null);
     const timer = setTimeout(async () => {
       setLoading(true);
       setError("");
       try {
         let data = await api(
-          `/people?${new URLSearchParams({ q: query, city, min_age: min, max_age: max, role: creatorMode ? "creator" : tab === "creators" ? "creator" : "all" })}`,
+          `/people?${new URLSearchParams({ q: query, city, gender, interest, has_photos: String(hasPhotos), following: String(tab === "following"), min_age: min, max_age: max, role: creatorMode ? "creator" : tab === "creators" ? "creator" : "all" })}`,
         );
         let pages = 1;
         const desired = Math.min(
@@ -71,7 +89,7 @@ export function Discover({
         );
         while (active && pages < desired && data.next_cursor) {
           const next = await api(
-            `/people?${new URLSearchParams({ q: query, city, min_age: min, max_age: max, role: creatorMode || tab === "creators" ? "creator" : "all", cursor: data.next_cursor })}`,
+            `/people?${new URLSearchParams({ q: query, city, gender, interest, has_photos: String(hasPhotos), following: String(tab === "following"), min_age: min, max_age: max, role: creatorMode || tab === "creators" ? "creator" : "all", cursor: data.next_cursor })}`,
           );
           data = {
             people: [...data.people, ...next.people],
@@ -91,9 +109,21 @@ export function Discover({
     }, 250);
     return () => {
       active = false;
+      generation.current++;
       clearTimeout(timer);
     };
-  }, [query, city, min, max, tab, creatorMode, version]);
+  }, [
+    query,
+    city,
+    min,
+    max,
+    tab,
+    creatorMode,
+    version,
+    gender,
+    interest,
+    hasPhotos,
+  ]);
   useEffect(() => {
     if (!loading) restoreListView();
   }, [loading]);
@@ -129,11 +159,14 @@ export function Discover({
     }
   }
   async function more() {
+    if (loading || busy || !cursor) return;
+    const request = generation.current;
     setBusy("more");
     try {
       const r = await api(
-        `/people?${new URLSearchParams({ q: query, city, min_age: min, max_age: max, role: creatorMode || tab === "creators" ? "creator" : "all", cursor })}`,
+        `/people?${new URLSearchParams({ q: query, city, gender, interest, has_photos: String(hasPhotos), following: String(tab === "following"), min_age: min, max_age: max, role: creatorMode || tab === "creators" ? "creator" : "all", cursor })}`,
       );
+      if (request !== generation.current) return;
       setPeople((p) => [...p, ...r.people]);
       setCursor(r.next_cursor);
       sessionStorage.setItem(
@@ -172,21 +205,22 @@ export function Discover({
           onClick={() => setFilters(!filters)}
         >
           <SlidersHorizontal size={17} />
-          Filters{city && <span className="filter-dot" />}
+          Filters
+          {(city || gender !== "everyone" || interest || hasPhotos) && (
+            <span className="filter-dot" />
+          )}
         </button>
       </div>
       {filters && (
         <div className="filter-panel">
           <label>
             City
-            <select value={city} onChange={(e) => setCity(e.target.value)}>
-              <option value="">All cities</option>
-              {["Mumbai", "Bengaluru", "Hyderabad", "Delhi", "Pune", "Goa"].map(
-                (v) => (
-                  <option key={v}>{v}</option>
-                ),
-              )}
-            </select>
+            <input
+              value={city}
+              maxLength={100}
+              placeholder="Any city"
+              onChange={(e) => setCity(e.target.value)}
+            />
           </label>
           <label>
             Minimum age
@@ -216,12 +250,42 @@ export function Discover({
               }
             />
           </label>
+          <label>
+            Gender
+            <select value={gender} onChange={(e) => setGender(e.target.value)}>
+              <option value="everyone">Any within my preferences</option>
+              <option value="woman">Women</option>
+              <option value="man">Men</option>
+              <option value="nonbinary">Non-binary people</option>
+              <option value="custom">Self-described</option>
+            </select>
+          </label>
+          <label>
+            Interest
+            <input
+              value={interest}
+              maxLength={30}
+              onChange={(e) => setInterest(e.target.value)}
+              placeholder="e.g. Music"
+            />
+          </label>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={hasPhotos}
+              onChange={(e) => setHasPhotos(e.target.checked)}
+            />
+            Has approved photos
+          </label>
           <button
             className="text-button"
             onClick={() => {
               setCity("");
               setMin(18);
               setMax(65);
+              setGender("everyone");
+              setInterest("");
+              setHasPhotos(false);
             }}
           >
             Reset
@@ -233,6 +297,7 @@ export function Discover({
           {[
             ["everyone", creatorMode ? "Creators" : "For you"],
             ...(!creatorMode ? [["creators", "Creators"]] : []),
+            ["following", "Following"],
           ].map(([key, label]) => (
             <button
               key={key}
@@ -392,6 +457,9 @@ export function Discover({
                   setCity("");
                   setMin(18);
                   setMax(65);
+                  setGender("everyone");
+                  setInterest("");
+                  setHasPhotos(false);
                   setVersion((v) => v + 1);
                 } catch (e) {
                   notify(e.message);

@@ -22,6 +22,7 @@ import { hash, fail, cleanUser, privateUser, age } from "./domain.mjs";
 export { hash, age } from "./domain.mjs";
 import { registerAuth } from "./routes/auth.mjs";
 import { registerPublic } from "./routes/public.mjs";
+import { registerSearch } from "./routes/search.mjs";
 import { registerSocialAuth, socialProviders } from "./social-auth.mjs";
 import { registerProfiles } from "./routes/profiles.mjs";
 import { registerDiscovery } from "./routes/discovery.mjs";
@@ -106,7 +107,10 @@ export function createApp(db, config) {
     res.set("X-Request-ID", req.requestId);
     if (
       !["GET", "HEAD", "OPTIONS"].includes(req.method) &&
-      !(req.method === "POST" && req.path === "/api/v1/auth/social/apple/callback") &&
+      !(
+        req.method === "POST" &&
+        req.path === "/api/v1/auth/social/apple/callback"
+      ) &&
       req.get("origin") !== config.origin
     )
       return next(fail(403, "Request origin is not allowed.", "FORBIDDEN"));
@@ -320,6 +324,7 @@ export function createApp(db, config) {
     }),
   );
   registerPublic(app, { db, config });
+  registerSearch(app, { db, config, authenticated, verified });
   registerRecovery(app, { db, config, authLimit, one, audit, cookieOpts });
   const operations = {
     db,
@@ -336,7 +341,16 @@ export function createApp(db, config) {
   registerPhotos(app, operations);
   registerEventOperations(app, operations);
   registerAccountRequests(app, operations);
-  registerSocialAuth(app, { db, config, one, audit, issueSession, authLimit, getCookies, sendVerification });
+  registerSocialAuth(app, {
+    db,
+    config,
+    one,
+    audit,
+    issueSession,
+    authLimit,
+    getCookies,
+    sendVerification,
+  });
   registerAuth(app, {
     accountLimit,
     db,

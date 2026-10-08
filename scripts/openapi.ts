@@ -16,6 +16,7 @@ import {
   loginSchema,
   verificationSchema,
   profileSchema,
+  profileDetailsSchema,
   reportSchema,
   messageSchema,
   photoReviewSchema,
@@ -39,12 +40,18 @@ const publicProperties = {
   id,
   display_name: str,
   username: str,
-  age: integer,
-  gender: { enum: ["woman", "man", "nonbinary", "custom"] },
+  age: nullable(integer),
+  gender: nullable({ enum: ["woman", "man", "nonbinary", "custom"] }),
   looking_for: { enum: ["everyone", "woman", "man", "nonbinary", "custom"] },
   city: str,
   bio: str,
   interests: array(str),
+  custom_gender: str,
+  connection_goals: array({
+    enum: ["casual", "friendship", "networking", "dating"],
+  }),
+  languages: array(str),
+  social_links: object({ instagram: str, x: str, tiktok: str }, []),
   role: { enum: ["user", "creator", "influencer"] },
   avatar_url: nullable(str),
   identity_verified: bool,
@@ -68,7 +75,9 @@ const schemas: Record<string, Schema> = {
     pending_avatar: bool,
     onboarding_completed: bool,
     onboarding_draft: ref("OnboardingInput"),
-    adult_eligibility: { const: "self_declared" },
+    adult_eligibility: { enum: ["self_declared", "unknown"] },
+    needs_demographics: bool,
+    has_password: bool,
   }),
   VerificationDelivery: object(
     {
@@ -177,6 +186,7 @@ for (const [name, schema] of Object.entries({
   LoginInput: loginSchema,
   VerificationInput: verificationSchema,
   ProfileInput: profileSchema,
+  ProfileDetailsInput: profileDetailsSchema,
   ReportInput: reportSchema,
   MessageInput: messageSchema,
   PhotoReviewInput: photoReviewSchema,
@@ -1131,6 +1141,75 @@ eventSchema.required = eventSchema.required.filter(
   paths[api + "/events/{id}/rsvp"].delete as Record<string, unknown>
 ).description =
   "Locks event and marks own RSVP cancelled once; retains history and releases capacity. Rejoining eligible events reactivates the same reservation.";
+add({
+  path: api + "/me/details",
+  method: "patch",
+  name: "updateProfileDetails",
+  tag: "Profile",
+  input: "ProfileDetailsInput",
+  response: ref("UserResponse"),
+  errors: [400, 403, 409],
+  description:
+    "Update own username, custom gender description, connection goals, languages, and platform-specific HTTPS social links. Links do not imply ownership verification.",
+});
+const searchPerson = object({
+  id,
+  display_name: str,
+  city: str,
+  interests: array(str),
+  role: publicProperties.role,
+});
+const searchEvent = object({
+  id,
+  title: str,
+  description: str,
+  category: str,
+  city: str,
+  starts_at: date,
+  image_url: nullable(str),
+  price_inr: integer,
+});
+for (const isPublic of [false, true])
+  add({
+    path: api + (isPublic ? "/public/search" : "/search"),
+    method: "get",
+    name: isPublic ? "publicSearch" : "memberSearch",
+    tag: "Search",
+    public: isPublic,
+    verified: !isPublic,
+    response: object({
+      people: array(isPublic ? searchPerson : ref("PublicPerson")),
+      events: array(searchEvent),
+      next_people_cursor: nullable(id),
+      next_events_cursor: nullable(id),
+    }),
+    parameters: [
+      { ...query("q", { type: "string", minLength: 2, maxLength: 100 }), required: true },
+      query("type", {
+        enum: ["all", "people", "creators", "events", "experiences"],
+        default: "all",
+      }),
+      query("cursor", id),
+    ],
+    description:
+      "20 results per section. Use type=people/creators with next_people_cursor or type=events with next_events_cursor. Public profiles omit private details and media. Member search enforces mutual gender preferences and blocking. Search limited to 30 requests per minute per IP.",
+  });
+const discoveryOperation = paths[api + "/people"].get as {
+  parameters: unknown[];
+};
+discoveryOperation.parameters.push(
+  query("gender", {
+    enum: ["everyone", "woman", "man", "nonbinary", "custom"],
+  }),
+  query("interest", { type: "string", maxLength: 30 }),
+  query("has_photos", { enum: ["true", "false"] }),
+  query("following", { enum: ["true", "false"] }),
+);
+historyOperation.parameters.push(
+  query("q", { type: "string", maxLength: 100 }),
+);
+historyOperation.description +=
+  " Optional q searches message text across the authorized conversation with the same cursor pagination.";
 const document = {
   openapi: "3.1.0",
   info: {

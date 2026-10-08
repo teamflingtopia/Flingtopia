@@ -1,4 +1,5 @@
 import { PhotoGallery } from "../components/PhotoGallery.jsx";
+import { ProfileDetails } from "../components/ProfileDetails.jsx";
 import { CreatorOptIn } from "../components/CreatorOptIn.jsx";
 import React, { useState, useEffect, useRef } from "react";
 
@@ -208,6 +209,7 @@ export function Profile({ user, setUser, notify }) {
         </form>
       </div>
       <PhotoGallery user={user} setUser={setUser} notify={notify} />
+      <ProfileDetails user={user} setUser={setUser} notify={notify} />
       <CreatorOptIn user={user} setUser={setUser} notify={notify} />
     </section>
   );

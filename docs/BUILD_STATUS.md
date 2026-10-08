@@ -1,5 +1,15 @@
 # Build status
 
+## October 8, 2026 requirements revisit
+
+Re-read all three supplied specifications and compared them to the code and saved prototype navigation evidence. See the current requirements inventory at the top of ROADMAP.md.
+
+Added global search, guest creator/event search, improved Back/guarded routes, discovery gender/interest/approved-photo filters and Following tab, extended profile details, inbox/unread filtering, and server-side conversation search. API contracts updated. `pnpm build` passed (TypeScript and Vite). This does not establish behavioral, security, browser or migration acceptance; no tests were run for this change.
+
+The previous social sign-in fix is committed as ebf4d81. These local changes require migrations 005 and 006 on the staging database currently recorded at 004, followed by application deployment. No hosted database or deployment was changed in this pass.
+
+Staging exists on Render with Supabase and Resend; Google sign-in is configured and the user has confirmed email delivery. The older status entries below describe earlier checkpoints and must not be read as current infrastructure status. The application is not yet a complete implementation of the full PRD or a production-readiness sign-off.
+
 ## October 5, 2026 staging preparation
 
 Render Free + Supabase + Resend deployment configuration is prepared in render.yaml and FREE_STAGING.md. Private photo storage and HTTPS email adapters are implemented. Password-protected hosted staging retains secure-cookie settings and disables demo access. Type checking and frontend build passed after these changes. Live provider integration and deployment remain pending; earlier 29-test validation results predate these adapters.

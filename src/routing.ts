@@ -1,4 +1,5 @@
 export const routeNames = {
+  search: "Search",
   onboarding: "Complete profile",
   signin: "Sign in",
   signup: "Create account",
@@ -65,7 +66,10 @@ export function openDetail(route: string) {
 export function backToList(fallback: string) {
   const from = routeQuery().get("from");
   const safe =
-    from && /^(discover|creators|experiences|messages)(\?[^#]*)?$/.test(from)
+    from &&
+    /^(discover|creators|experiences|search|messages(?:\/[a-f0-9-]{36})?)(\?[^#]*)?$/.test(
+      from,
+    )
       ? from
       : fallback;
   if (history.state?.ftDetail) history.back();

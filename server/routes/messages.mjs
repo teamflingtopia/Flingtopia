@@ -55,10 +55,11 @@ export function registerMessages(app, context) {
       const beforeId = req.query.before_id
         ? uuid.parse(req.query.before_id)
         : null;
+      const q = z.string().trim().max(100).default("").parse(req.query.q);
       const rows = (
         await db.query(
-          `SELECT id,sender_id,body,client_id,created_at,read_at,to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_time FROM messages WHERE match_id=$1 AND ($2::timestamptz IS NULL OR created_at<$2 OR (created_at=$2 AND $3::uuid IS NOT NULL AND id<$3)) ORDER BY created_at DESC,id DESC LIMIT 101`,
-          [id, before, beforeId],
+          `SELECT id,sender_id,body,client_id,created_at,read_at,to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_time FROM messages WHERE match_id=$1 AND ($2::timestamptz IS NULL OR created_at<$2 OR (created_at=$2 AND $3::uuid IS NOT NULL AND id<$3)) AND body ILIKE $4 ORDER BY created_at DESC,id DESC LIMIT 101`,
+          [id, before, beforeId, `%${q.replace(/[\\%_]/g, "\\$&")}%`],
         )
       ).rows;
       res.json({

@@ -33,6 +33,7 @@ import { Avatar, Brand, Spinner, Empty } from "../components/ui.tsx";
 import { routeNames, getRoute, navigate, fmtDate } from "../routing.ts";
 import { Auth } from "./Auth.jsx";
 import { Guest } from "./Guest.jsx";
+import { Search as GlobalSearch } from "./Search.jsx";
 import { Discover } from "./Discover.jsx";
 import { Experiences } from "./Experiences.jsx";
 import { Messages } from "./Messages.jsx";
@@ -121,6 +122,8 @@ export function App() {
       setUser(null);
       setConversations([]);
       setEvents([]);
+      for (const key of Object.keys(sessionStorage))
+        if (key.startsWith("ft-recent-search:")) sessionStorage.removeItem(key);
     };
     window.addEventListener("ft-session-expired", expired);
     return () => window.removeEventListener("ft-session-expired", expired);
@@ -205,7 +208,8 @@ export function App() {
           key.startsWith("ft-pending-message:") ||
           key.startsWith("ft-profile-draft:") ||
           key.startsWith("ft-pages:") ||
-          key.startsWith("ft-view:")
+          key.startsWith("ft-view:") ||
+          key.startsWith("ft-recent-search:")
         )
           sessionStorage.removeItem(key);
     } catch (e) {
@@ -301,7 +305,10 @@ export function App() {
             setEvents([]);
           }}
         />
-      ) : !user && !['signin','signup','social-complete','social-error'].includes(location.hash.slice(1).split('?')[0]) ? (
+      ) : !user &&
+        !["signin", "signup", "social-complete", "social-error"].includes(
+          location.hash.slice(1).split("?")[0],
+        ) ? (
         <Guest key={destination} route={route} entityId={entityId} />
       ) : !user ? (
         <Auth
@@ -311,24 +318,36 @@ export function App() {
           demo={config?.demo}
           onAuth={(u) => {
             setUser(u);
-            if (!location.hash || ['unavailable','signin','signup'].includes(route))
+            if (
+              !location.hash ||
+              ["unavailable", "signin", "signup"].includes(route)
+            )
               navigate(u.staff_role ? "moderation" : "discover");
           }}
           notify={notify}
         />
       ) : !user.onboarding_completed && !user.is_demo ? (
-        route !== 'onboarding' ? <Guest key={destination} route={route} entityId={entityId} user={user} logout={logout} /> :
-        <>
-          <Onboarding
-            emailDisabled={config?.email_disabled}
-            key={user.id}
+        route !== "onboarding" ? (
+          <Guest
+            key={destination}
+            route={route}
+            entityId={entityId}
             user={user}
-            setUser={setUser}
-            verifyEmail={verifyEmail}
             logout={logout}
-            notify={notify}
           />
-        </>
+        ) : (
+          <>
+            <Onboarding
+              emailDisabled={config?.email_disabled}
+              key={user.id}
+              user={user}
+              setUser={setUser}
+              verifyEmail={verifyEmail}
+              logout={logout}
+              notify={notify}
+            />
+          </>
+        )
       ) : (
         <div className="app-shell">
           <a
@@ -456,6 +475,9 @@ export function App() {
                 <strong>{routeNames[route]}</strong>
               </span>
               <div className="topbar-right">
+                <a className="button outline" href="#search">
+                  Search
+                </a>
                 <span className="location">
                   <MapPin size={15} />
                   {user.city}
@@ -632,6 +654,9 @@ export function App() {
                   setSelected={setSelectedChat}
                 />
               )}{" "}
+              {route === "search" && (
+                <GlobalSearch key={destination} user={user} />
+              )}
               {route === "profile" && <Profile {...common} setUser={setUser} />}{" "}
               {route === "settings" && (
                 <SettingsView {...common} onLogout={logout} />

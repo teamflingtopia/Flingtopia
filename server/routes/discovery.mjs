@@ -21,7 +21,7 @@ export function registerDiscovery(app, context) {
       throw fail(400, "Minimum age must not exceed maximum age.");
     const rows = (
       await db.query(
-        `SELECT u.*,EXISTS(SELECT 1 FROM follows f WHERE f.user_id=$1 AND f.target_id=u.id) AS is_following FROM users u WHERE u.id<>$1 AND u.staff_role IS NULL AND u.status='active' AND u.profile_visible=true AND u.email_verified=true AND (u.onboarding_completed_at IS NOT NULL OR u.is_demo=true) AND (u.is_demo=false OR $2=true) AND (u.display_name ILIKE $3 OR u.username ILIKE $3 OR u.bio ILIKE $3 OR array_to_string(u.interests,', ') ILIKE $3) AND ($4='' OR lower(u.city)=lower($4)) AND ($5='all' OR u.role=$5 OR ($5='creator' AND u.role='influencer')) AND EXTRACT(YEAR FROM age(u.dob)) BETWEEN $6 AND $7 AND ($8='everyone' OR u.gender=$8) AND (u.looking_for='everyone' OR u.looking_for=$9) AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.user_id=$1 AND b.target_id=u.id) OR (b.target_id=$1 AND b.user_id=u.id)) AND NOT EXISTS(SELECT 1 FROM passes p WHERE p.user_id=$1 AND p.target_id=u.id) AND NOT EXISTS(SELECT 1 FROM likes l WHERE l.user_id=$1 AND l.target_id=u.id) AND ($10::uuid IS NULL OR u.id>$10) ORDER BY u.id LIMIT 21`,
+        `SELECT u.*,EXISTS(SELECT 1 FROM follows f WHERE f.user_id=$1 AND f.target_id=u.id) AS is_following FROM users u WHERE u.id<>$1 AND u.staff_role IS NULL AND u.status='active' AND u.profile_visible=true AND u.email_verified=true AND (u.onboarding_completed_at IS NOT NULL OR u.is_demo=true) AND (u.is_demo=false OR $2=true) AND (u.display_name ILIKE $3 OR u.username ILIKE $3 OR u.bio ILIKE $3 OR array_to_string(u.interests,', ') ILIKE $3) AND ($4='' OR lower(u.city)=lower($4)) AND ($5='all' OR u.role=$5 OR ($5='creator' AND u.role='influencer')) AND EXTRACT(YEAR FROM age(u.dob)) BETWEEN $6 AND $7 AND ($8='everyone' OR u.gender=$8) AND (u.looking_for='everyone' OR u.looking_for=$9) AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.user_id=$1 AND b.target_id=u.id) OR (b.target_id=$1 AND b.user_id=u.id)) AND ($14=true OR (NOT EXISTS(SELECT 1 FROM passes p WHERE p.user_id=$1 AND p.target_id=u.id) AND NOT EXISTS(SELECT 1 FROM likes l WHERE l.user_id=$1 AND l.target_id=u.id))) AND ($11='everyone' OR u.gender=$11) AND ($12='' OR EXISTS(SELECT 1 FROM unnest(u.interests) AS tag WHERE lower(tag)=lower($12))) AND ($13=false OR EXISTS(SELECT 1 FROM profile_photos pp WHERE pp.user_id=u.id AND pp.status='approved')) AND ($14=false OR EXISTS(SELECT 1 FROM follows f WHERE f.user_id=$1 AND f.target_id=u.id)) AND ($10::uuid IS NULL OR u.id>$10) ORDER BY u.id LIMIT 21`,
         [
           req.user.id,
           config.demo,
@@ -33,6 +33,10 @@ export function registerDiscovery(app, context) {
           req.user.looking_for,
           req.user.gender,
           b.cursor || null,
+          b.gender,
+          b.interest,
+          b.has_photos,
+          b.following,
         ],
       )
     ).rows;

@@ -1345,6 +1345,51 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "everyone",
+                "woman",
+                "man",
+                "nonbinary",
+                "custom"
+              ]
+            }
+          },
+          {
+            "name": "interest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 30
+            }
+          },
+          {
+            "name": "has_photos",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "following",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
           }
         ],
         "responses": {
@@ -2305,7 +2350,7 @@
           "Messages"
         ],
         "summary": "list Messages",
-        "description": "Latest 100 in ascending order; has_more indicates older history. For exact pagination send earliest message cursor_time (microsecond UTC ISO) as before and its id as before_id. Client retains earlier pages during polling.",
+        "description": "Latest 100 in ascending order; has_more indicates older history. For exact pagination send earliest message cursor_time (microsecond UTC ISO) as before and its id as before_id. Client retains earlier pages during polling. Optional q searches message text across the authorized conversation with the same cursor pagination.",
         "security": [
           {
             "accessCookie": []
@@ -2339,6 +2384,15 @@
               "format": "uuid"
             },
             "description": "Use with the earliest returned cursor_time as before. UUID tie-breaker prevents skipping equal timestamps."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
           }
         ],
         "responses": {
@@ -3817,14 +3871,28 @@
                           "type": "string"
                         },
                         "age": {
-                          "type": "integer"
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "gender": {
-                          "enum": [
-                            "woman",
-                            "man",
-                            "nonbinary",
-                            "custom"
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "woman",
+                                "man",
+                                "nonbinary",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         },
                         "looking_for": {
@@ -3847,6 +3915,41 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "custom_gender": {
+                          "type": "string"
+                        },
+                        "connection_goals": {
+                          "type": "array",
+                          "items": {
+                            "enum": [
+                              "casual",
+                              "friendship",
+                              "networking",
+                              "dating"
+                            ]
+                          }
+                        },
+                        "languages": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "social_links": {
+                          "type": "object",
+                          "properties": {
+                            "instagram": {
+                              "type": "string"
+                            },
+                            "x": {
+                              "type": "string"
+                            },
+                            "tiktok": {
+                              "type": "string"
+                            }
+                          },
+                          "required": []
                         },
                         "role": {
                           "enum": [
@@ -3918,6 +4021,10 @@
                         "city",
                         "bio",
                         "interests",
+                        "custom_gender",
+                        "connection_goals",
+                        "languages",
+                        "social_links",
                         "role",
                         "avatar_url",
                         "identity_verified",
@@ -6768,6 +6875,493 @@
           }
         }
       }
+    },
+    "/api/v1/me/details": {
+      "patch": {
+        "operationId": "updateProfileDetails",
+        "tags": [
+          "Profile"
+        ],
+        "summary": "update Profile Details",
+        "description": "Update own username, custom gender description, connection goals, languages, and platform-specific HTTPS social links. Links do not imply ownership verification.",
+        "security": [
+          {
+            "accessCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "description": "Must exactly equal configured APP_ORIGIN, including scheme and port.",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation or upload error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or expired session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, role, verification or contact permission denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or daily limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileDetailsInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "operationId": "memberSearch",
+        "tags": [
+          "Search"
+        ],
+        "summary": "member Search",
+        "description": "20 results per section. Use type=people/creators with next_people_cursor or type=events with next_events_cursor. Public profiles omit private details and media. Member search enforces mutual gender preferences and blocking. Search limited to 30 requests per minute per IP. Verified email and completed onboarding required; local demo fixtures bypass onboarding.",
+        "security": [
+          {
+            "accessCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "all",
+                "people",
+                "creators",
+                "events",
+                "experiences"
+              ],
+              "default": "all"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PublicPerson"
+                      }
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "starts_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "image_url": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "price_inr": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "category",
+                          "city",
+                          "starts_at",
+                          "image_url",
+                          "price_inr"
+                        ]
+                      }
+                    },
+                    "next_people_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "next_events_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "people",
+                    "events",
+                    "next_people_cursor",
+                    "next_events_cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or expired session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or daily limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/search": {
+      "get": {
+        "operationId": "publicSearch",
+        "tags": [
+          "Search"
+        ],
+        "summary": "public Search",
+        "description": "20 results per section. Use type=people/creators with next_people_cursor or type=events with next_events_cursor. Public profiles omit private details and media. Member search enforces mutual gender preferences and blocking. Search limited to 30 requests per minute per IP.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "all",
+                "people",
+                "creators",
+                "events",
+                "experiences"
+              ],
+              "default": "all"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "interests": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "role": {
+                            "enum": [
+                              "user",
+                              "creator",
+                              "influencer"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "display_name",
+                          "city",
+                          "interests",
+                          "role"
+                        ]
+                      }
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "starts_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "image_url": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "price_inr": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "category",
+                          "city",
+                          "starts_at",
+                          "image_url",
+                          "price_inr"
+                        ]
+                      }
+                    },
+                    "next_people_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "next_events_cursor": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "people",
+                    "events",
+                    "next_people_cursor",
+                    "next_events_cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or daily limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6835,14 +7429,28 @@
             "type": "string"
           },
           "age": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "gender": {
-            "enum": [
-              "woman",
-              "man",
-              "nonbinary",
-              "custom"
+            "anyOf": [
+              {
+                "enum": [
+                  "woman",
+                  "man",
+                  "nonbinary",
+                  "custom"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "looking_for": {
@@ -6865,6 +7473,41 @@
             "items": {
               "type": "string"
             }
+          },
+          "custom_gender": {
+            "type": "string"
+          },
+          "connection_goals": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "casual",
+                "friendship",
+                "networking",
+                "dating"
+              ]
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "social_links": {
+            "type": "object",
+            "properties": {
+              "instagram": {
+                "type": "string"
+              },
+              "x": {
+                "type": "string"
+              },
+              "tiktok": {
+                "type": "string"
+              }
+            },
+            "required": []
           },
           "role": {
             "enum": [
@@ -6900,6 +7543,10 @@
           "city",
           "bio",
           "interests",
+          "custom_gender",
+          "connection_goals",
+          "languages",
+          "social_links",
           "role",
           "avatar_url",
           "identity_verified",
@@ -6920,14 +7567,28 @@
             "type": "string"
           },
           "age": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "gender": {
-            "enum": [
-              "woman",
-              "man",
-              "nonbinary",
-              "custom"
+            "anyOf": [
+              {
+                "enum": [
+                  "woman",
+                  "man",
+                  "nonbinary",
+                  "custom"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "looking_for": {
@@ -6950,6 +7611,41 @@
             "items": {
               "type": "string"
             }
+          },
+          "custom_gender": {
+            "type": "string"
+          },
+          "connection_goals": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "casual",
+                "friendship",
+                "networking",
+                "dating"
+              ]
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "social_links": {
+            "type": "object",
+            "properties": {
+              "instagram": {
+                "type": "string"
+              },
+              "x": {
+                "type": "string"
+              },
+              "tiktok": {
+                "type": "string"
+              }
+            },
+            "required": []
           },
           "role": {
             "enum": [
@@ -7007,7 +7703,16 @@
             "$ref": "#/components/schemas/OnboardingInput"
           },
           "adult_eligibility": {
-            "const": "self_declared"
+            "enum": [
+              "self_declared",
+              "unknown"
+            ]
+          },
+          "needs_demographics": {
+            "type": "boolean"
+          },
+          "has_password": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -7020,6 +7725,10 @@
           "city",
           "bio",
           "interests",
+          "custom_gender",
+          "connection_goals",
+          "languages",
+          "social_links",
           "role",
           "avatar_url",
           "identity_verified",
@@ -7031,7 +7740,9 @@
           "pending_avatar",
           "onboarding_completed",
           "onboarding_draft",
-          "adult_eligibility"
+          "adult_eligibility",
+          "needs_demographics",
+          "has_password"
         ]
       },
       "VerificationDelivery": {
@@ -7103,14 +7814,28 @@
                   "type": "string"
                 },
                 "age": {
-                  "type": "integer"
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 },
                 "gender": {
-                  "enum": [
-                    "woman",
-                    "man",
-                    "nonbinary",
-                    "custom"
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "woman",
+                        "man",
+                        "nonbinary",
+                        "custom"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "looking_for": {
@@ -7133,6 +7858,41 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "custom_gender": {
+                  "type": "string"
+                },
+                "connection_goals": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "casual",
+                      "friendship",
+                      "networking",
+                      "dating"
+                    ]
+                  }
+                },
+                "languages": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "social_links": {
+                  "type": "object",
+                  "properties": {
+                    "instagram": {
+                      "type": "string"
+                    },
+                    "x": {
+                      "type": "string"
+                    },
+                    "tiktok": {
+                      "type": "string"
+                    }
+                  },
+                  "required": []
                 },
                 "role": {
                   "enum": [
@@ -7171,6 +7931,10 @@
                 "city",
                 "bio",
                 "interests",
+                "custom_gender",
+                "connection_goals",
+                "languages",
+                "social_links",
                 "role",
                 "avatar_url",
                 "identity_verified",
@@ -7668,6 +8432,29 @@
           "profile_visible": {
             "type": "boolean"
           },
+          "dob": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "",
+              "woman",
+              "man",
+              "nonbinary",
+              "custom"
+            ]
+          },
           "step": {
             "type": "string",
             "enum": [
@@ -7716,6 +8503,20 @@
           },
           "profile_visible": {
             "type": "boolean"
+          },
+          "dob": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "woman",
+              "man",
+              "nonbinary",
+              "custom"
+            ]
           },
           "terms": {
             "type": "boolean",
@@ -8055,6 +8856,70 @@
           "interests",
           "looking_for",
           "profile_visible"
+        ]
+      },
+      "ProfileDetailsInput": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]{3,30}$"
+          },
+          "custom_gender": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "connection_goals": {
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "casual",
+                "friendship",
+                "networking",
+                "dating"
+              ]
+            }
+          },
+          "languages": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "social_links": {
+            "type": "object",
+            "properties": {
+              "instagram": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "x": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "tiktok": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "instagram",
+              "x",
+              "tiktok"
+            ]
+          }
+        },
+        "required": [
+          "username",
+          "custom_gender",
+          "connection_goals",
+          "languages",
+          "social_links"
         ]
       },
       "ReportInput": {
