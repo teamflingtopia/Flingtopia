@@ -18,6 +18,7 @@ export function Onboarding({
     profile_visible: user.profile_visible,
     step: "profile",
     ...user.onboarding_draft,
+    ...(user.needs_demographics ? { dob: user.onboarding_draft?.dob || '', gender: user.onboarding_draft?.gender || '' } : {}),
   }));
   const [interestText, setInterestText] = useState(draft.interests.join(", "));
   const [status, setStatus] = useState(""),
@@ -35,7 +36,11 @@ export function Onboarding({
   function persist(value) {
     const request = queue.current
       .catch(() => {})
-      .then(() => api("/me/onboarding", { method: "PATCH", body: value }));
+      .then(() => api("/me/onboarding", { method: "PATCH", body: value }))
+      .then(result => {
+        setUser(previous => previous ? { ...previous, onboarding_draft: value } : previous);
+        return result;
+      });
     queue.current = request;
     return request;
   }
@@ -87,6 +92,7 @@ export function Onboarding({
           },
         });
         setUser(r.user);
+        location.hash = 'discover';
         notify("Your profile is ready. Start exploring.");
       }
     } catch (e) {
@@ -100,6 +106,7 @@ export function Onboarding({
     <section className="settings-card stack onboarding-card">
       <span className="eyebrow">WELCOME TO FLINGTOPIA</span>
       <h1>Make room for connection.</h1>
+      <a href="#discover" className="text-button">Explore first →</a>
       <p>
         Your progress is saved to your account. You can return after signing in
         on another device.
@@ -151,6 +158,12 @@ export function Onboarding({
       >
         {draft.step === "profile" && (
           <>
+            {user.needs_demographics && <>
+              <label>Date of birth<input type="date" value={draft.dob} onChange={e=>change({dob:e.target.value})} required /></label>
+              <label>Gender<select value={draft.gender} onChange={e=>change({gender:e.target.value})} required>
+                <option value="">Choose your gender</option><option value="woman">Woman</option><option value="man">Man</option><option value="nonbinary">Non-binary</option><option value="custom">Self-described</option>
+              </select></label>
+            </>}
             <label>
               Display name
               <input

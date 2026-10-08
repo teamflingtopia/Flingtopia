@@ -36,11 +36,15 @@ export const resetSchema = z.object({
   password,
 });
 export const onboardingSchema = profileSchema.partial().extend({
+  dob: z.union([z.string().date(), z.literal("")]).optional(),
+  gender: z.enum(["", "woman", "man", "nonbinary", "custom"]).optional(),
   display_name: z.string().max(40).optional(),
   city: z.string().max(100).optional(),
   step: z.enum(["profile", "preferences", "review"]).optional(),
 });
 export const completionSchema = profileSchema.extend({
+  dob: z.string().date().optional(),
+  gender: z.enum(["woman", "man", "nonbinary", "custom"]).optional(),
   terms: z.literal(true),
   consent_version: z.literal(policies.community.version),
 });

@@ -9,7 +9,7 @@ import { resolve } from "node:path";
 import multer from "multer";
 import sharp from "sharp";
 
-import { fail, privateUser, profileSchema } from "../domain.mjs";
+import { fail, privateUser, profileSchema, age } from "../domain.mjs";
 export function registerProfiles(app, context) {
   const { db, config, authenticated, verified, one, audit, contactAllowed } =
     context;
@@ -35,6 +35,11 @@ export function registerProfiles(app, context) {
           [req.user.id],
           tx,
         );
+        if (u.status !== 'active') throw fail(403, 'Account unavailable.');
+        const dob = u.dob || b.dob;
+        const gender = u.gender || b.gender;
+        if (!dob || !gender || age(dob) < 18 || age(dob) > 120)
+          throw fail(400, 'Enter your date of birth and gender. Flingtopia is for adults aged 18 and over.');
         if (!u.email_verified)
           throw fail(
             403,
@@ -46,7 +51,7 @@ export function registerProfiles(app, context) {
           [u.id, b.consent_version],
         );
         const updated = await one(
-          "UPDATE users SET display_name=$1,city=$2,bio=$3,interests=$4,looking_for=$5,profile_visible=$6,onboarding_completed_at=COALESCE(onboarding_completed_at,now()),onboarding_draft='{}',updated_at=now() WHERE id=$7 RETURNING *",
+          "UPDATE users SET display_name=$1,city=$2,bio=$3,interests=$4,looking_for=$5,profile_visible=$6,onboarding_completed_at=COALESCE(onboarding_completed_at,now()),onboarding_draft='{}',updated_at=now(),dob=$8,gender=$9 WHERE id=$7 RETURNING *",
           [
             b.display_name,
             b.city,
@@ -55,6 +60,8 @@ export function registerProfiles(app, context) {
             b.looking_for,
             b.profile_visible,
             u.id,
+            dob,
+            gender,
           ],
           tx,
         );

@@ -132,7 +132,7 @@ export function registerStaffSecurity(
         .object({ password: z.string().max(256).default("") })
         .parse(req.body);
       const demo = config.demo && !config.production && req.user.is_demo;
-      if (!demo && !(await bcrypt.compare(password, req.user.password_hash)))
+      if (!demo && (!req.user.password_hash || !(await bcrypt.compare(password, req.user.password_hash))))
         throw fail(403, "Password is incorrect.", "REAUTH_REQUIRED");
       const secret = randomBytes(20);
       await db.transaction(async (tx) => {

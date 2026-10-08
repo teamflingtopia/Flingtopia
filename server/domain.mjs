@@ -27,9 +27,12 @@ export const privateUser = (u) => ({
   pending_avatar: !!u.pending_avatar,
   onboarding_completed: !!u.onboarding_completed_at,
   onboarding_draft: u.onboarding_draft || {},
-  adult_eligibility: "self_declared",
+  needs_demographics: !u.dob || !u.gender,
+  has_password: !!u.password_hash,
+  adult_eligibility: u.dob ? "self_declared" : "unknown",
 });
 export function age(dob) {
+  if (!dob) return null;
   const b = new Date(dob),
     n = new Date();
   return (

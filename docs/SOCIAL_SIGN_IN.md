@@ -2,7 +2,7 @@
 
 ## Release status
 
-Implemented locally; provider credentials, database migration, and deployment are required before the buttons appear. No live provider sign-in or automated tests have been run for this change. Keep Render automatic deploy disabled until migration 004 is applied.
+Google sign-in and migration 004 are deployed. The immediate sign-in update is implemented locally and requires migration 005 before deployment. No automated tests or live provider sign-in checks have been run for this update. Keep Render automatic deploy disabled until migration 005 is applied.
 
 ## Account behavior
 
@@ -10,10 +10,11 @@ Implemented locally; provider credentials, database migration, and deployment ar
 - Identity tokens are checked against provider signing keys, issuer, audience, expiry, nonce, and authorized-party claims. Provider access and refresh tokens are discarded.
 - OAuth transactions last ten minutes, are single-use, and are bound to an HttpOnly browser cookie. Apple requires HTTPS and a Secure SameSite=None callback cookie. The exact Apple POST callback is exempt from the application's same-origin POST check; its state and browser binding provide CSRF protection instead.
 - Returning identities use normal application sessions. Suspended/deleted accounts cannot log in; staff MFA requirements remain in place.
-- New members enter their name, username, date of birth, gender, city, consent, and a backup password. The password supports existing export/deletion and recovery workflows; subsequent social sign-ins require no application password.
+- New social members receive a session immediately and land in Explore, with no email/password/username registration form. A unique username is generated; a Google display name is used when supplied. No application password, birth date, or gender is fabricated. Profile completion is deferred; date of birth, gender, profile details, and consent are required before connecting. Existing protected endpoints still enforce completion.
+- Passwordless members can use Forgot password to establish a password when needed for the existing sensitive account export/deletion workflow. Password creation is never a prerequisite for social sign-in or browsing.
 - An existing email address is never sufficient to link accounts: the existing account password is required. Identity links cannot be silently replaced. Account linking/unlinking management is not included in this release.
 - Apple verified email and Google Gmail/Workspace email can satisfy email verification. Google third-party email addresses without a hosted-domain claim still require the application's email verification.
-- Only email is taken from provider claims for new profiles. Age, identity verification, staff roles, and consent are never inferred from a provider.
+- Email and an optional display name are taken from provider claims for new profiles. Age, identity verification, staff roles, and consent are never inferred from a provider.
 - Private Relay addresses from Apple are treated as distinct email addresses. An existing account with a different email is not automatically merged.
 
 ## Google setup
@@ -37,7 +38,7 @@ Implemented locally; provider credentials, database migration, and deployment ar
 ## Database and rollout
 
 1. Back up the staging database using the existing backup procedure.
-2. Run `pnpm db:migrate` with the migration-owner connection in `MIGRATION_DATABASE_URL` and the existing verified TLS CA configuration. Do not run migrations with the restricted web login.
+2. Apply migration 005 before deploying the immediate social sign-in change. It permits missing birth date, gender, and password on incomplete accounts and requires demographics on completed profiles. Run `pnpm db:migrate` with the migration-owner connection in `MIGRATION_DATABASE_URL` and the existing verified TLS CA configuration. Do not run migrations with the restricted web login or edit migration 004, which has already been applied.
 3. Migration 004 adds `social_identities` and `social_auth_flows`, their indexes, and restricted server-role permissions when that role exists. It revokes browser-role access. The migration runner records the normalized SQL checksum in `app_migrations`; do not paste only the migration body into SQL Editor without recording the ledger through the approved deployment workflow.
 4. If bootstrapping a new Supabase database, apply all migrations and then `scripts/supabase-access.sql`.
 5. Push the code, save provider credentials, and deploy. A configured Google provider can ship independently while Apple remains unconfigured.

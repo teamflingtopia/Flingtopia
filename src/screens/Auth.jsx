@@ -19,7 +19,10 @@ export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = []
     [error, setError] = useState(location.hash === '#social-error' ? 'Social sign-in could not be completed. Please try again.' : '');
   useEffect(() => {
     if (location.hash === '#social-complete') {
-      api('/auth/social/pending').then(p => { setSocial(p); setMode(p.existing_account ? 'login' : 'register'); }).catch(e => setError(e.message));
+      api('/auth/social/pending').then(p => {
+        if (!p.existing_account) throw new Error('Please restart Google or Apple sign-in. Your earlier sign-in attempt has expired.');
+        setSocial(p); setMode('login');
+      }).catch(e => setError(e.message));
     }
   }, []);
   async function submit(e) {
@@ -117,7 +120,7 @@ export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = []
               : "A few details, and you’re on your way."}
           </p>
           <form onSubmit={submit} className="stack">
-            {social && <p className="muted">{social.existing_account ? 'An account already uses this email. Enter its password to link your social sign-in.' : 'Complete your profile and choose a backup password for recovery and sensitive account actions. Future sign-ins can use your social account.'}</p>}
+            {social && <p className="muted">An account already uses this email. Enter its password to link your social sign-in.</p>}
             <label>
               Email address
               <input

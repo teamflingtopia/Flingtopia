@@ -317,6 +317,7 @@ export function App() {
           notify={notify}
         />
       ) : !user.onboarding_completed && !user.is_demo ? (
+        route !== 'onboarding' ? <Guest key={destination} route={route} entityId={entityId} user={user} logout={logout} /> :
         <>
           <Onboarding
             emailDisabled={config?.email_disabled}

@@ -26,6 +26,7 @@ export function registerAccountRequests(
     (req) => req.user.id,
   );
   async function reauth(req) {
+    if (!req.user.password_hash) throw fail(403, 'Use Forgot password to set an account password before this sensitive action.', 'PASSWORD_REQUIRED');
     const { password } = accountRequestInput.parse(req.body);
     if (!(await bcrypt.compare(password, req.user.password_hash)))
       throw fail(403, "Confirm your current password.", "REAUTH_REQUIRED");

@@ -1,4 +1,5 @@
 export const routeNames = {
+  onboarding: "Complete profile",
   signin: "Sign in",
   signup: "Create account",
   discover: "People",

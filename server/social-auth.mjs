@@ -3,8 +3,8 @@ import { createRemoteJWKSet, jwtVerify, SignJWT, importPKCS8 } from 'jose';
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { registerSchema, email } from '../shared/validation.ts';
-import { hash, fail, privateUser, age } from './domain.mjs';
+import { email } from '../shared/validation.ts';
+import { hash, fail, privateUser } from './domain.mjs';
 import { sharedLimit } from './security.mjs';
 
 const providers = {
@@ -70,6 +70,23 @@ export function registerSocialAuth(app, { db, config, one, audit, issueSession, 
       if(payload.email_verified!==true && payload.email_verified!=='true') throw new Error('Verified email required');
       const address=email.parse(payload.email);
       const identity={subject:payload.sub,email:address,verified:p==='apple' || address.endsWith('@gmail.com') || (typeof payload.hd==='string' && payload.hd.length>0)};
+      // New provider identities receive a real session immediately. Existing-email
+      // accounts still require proof of the original account before linking.
+      const created=await db.transaction(async tx=>{
+        if(await one('SELECT id FROM users WHERE email=$1',[address],tx)) return null;
+        const name=typeof payload.name==='string' ? payload.name.trim().slice(0,40) : '';
+        const u=await one("INSERT INTO users(id,email,username,password_hash,display_name,dob,gender,city,email_verified,profile_visible) VALUES($1,$2,$3,NULL,$4,NULL,NULL,'',$5,false) ON CONFLICT(email) DO NOTHING RETURNING *",[randomUUID(),address,`ft_${randomBytes(12).toString('hex')}`,name.length>=2?name:'New member',identity.verified],tx);
+        if(!u) return null;
+        await tx.query('INSERT INTO social_identities(provider,subject,user_id) VALUES($1,$2,$3)',[p,payload.sub,u.id]);
+        await audit(tx,u.id,'social_account_created',u.id,{provider:p});
+        await tx.query('DELETE FROM social_auth_flows WHERE state_hash=$1',[f.state_hash]);
+        await issueSession(u,res,undefined,tx);
+        return u;
+      });
+      if(created){
+        res.append('Set-Cookie',cookie('',0));
+        return res.redirect(303,`${config.origin}/#discover`);
+      }
       await db.query('UPDATE social_auth_flows SET identity=$1,verifier=$2 WHERE state_hash=$3',[JSON.stringify(identity),'',f.state_hash]);
       return res.redirect(303,`${config.origin}/#social-complete`);
     } catch {
@@ -95,18 +112,12 @@ export function registerSocialAuth(app, { db, config, one, audit, issueSession, 
       let u=await one('SELECT * FROM users WHERE email=$1 FOR UPDATE',[f.identity.email],tx);
       if(u) {
         const password=z.string().max(256).parse(req.body.existing_password);
-        if(u.status!=='active' || !(await bcrypt.compare(password,u.password_hash))) throw fail(401,'The account password is incorrect. Use password recovery if needed.');
+        if(u.status!=='active' || !u.password_hash || !(await bcrypt.compare(password,u.password_hash))) throw fail(401,'The account password is incorrect. Use password recovery if needed.');
         // Linking requires both provider authentication and the existing account password.
         await tx.query('INSERT INTO social_identities(provider,subject,user_id) VALUES($1,$2,$3)',[f.provider,f.identity.subject,u.id]);
         await audit(tx,u.id,'social_identity_linked',u.id,{provider:f.provider});
       } else {
-        const b=registerSchema.parse({...req.body,email:f.identity.email});
-        if(age(b.dob)<18 || age(b.dob)>120) throw fail(400,'Flingtopia is for adults aged 18 and over.');
-        if(Buffer.byteLength(b.password,'utf8')>72) throw fail(400,'Password must fit within 72 UTF-8 bytes.');
-        u=await one('INSERT INTO users(id,email,username,password_hash,display_name,dob,gender,city,email_verified) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',[randomUUID(),b.email,b.username,await bcrypt.hash(b.password,12),b.display_name,b.dob,b.gender,b.city,f.identity.verified===true],tx);
-        await tx.query('INSERT INTO user_consents(user_id,kind,version) VALUES($1,$2,$3)',[u.id,'community',b.consent_version]);
-        await tx.query('INSERT INTO social_identities(provider,subject,user_id) VALUES($1,$2,$3)',[f.provider,f.identity.subject,u.id]);
-        await audit(tx,u.id,'account_registered',u.id,{provider:f.provider,terms_version:b.consent_version});
+        throw fail(400,'Please restart Google or Apple sign-in to create your account.');
       }
       await tx.query('DELETE FROM social_auth_flows WHERE state_hash=$1',[f.state_hash]);
       await issueSession(u,res,undefined,tx);
