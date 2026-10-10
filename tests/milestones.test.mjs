@@ -36,6 +36,7 @@ before(async () => {
   const hash = await bcrypt.hash(password, 12);
   await db.query("UPDATE users SET password_hash=$1", [hash]);
   config = {
+    authEnabled: true,
     secret: "isolated-validation-secret-with-at-least-32-characters",
     origin: "http://127.0.0.1:5173",
     demo: true,

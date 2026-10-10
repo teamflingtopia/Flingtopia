@@ -100,7 +100,11 @@ export function Messages({ user, notify, reload, selected, setSelected }) {
         if (!active) return;
         const saved = readPending();
         if (saved && r.messages.some((m) => m.client_id === saved.client_id)) {
-          sessionStorage.removeItem(pendingKey);
+          try {
+            sessionStorage.removeItem(pendingKey);
+          } catch {
+            /* Storage may be unavailable. */
+          }
           setPending(null);
           setText("");
         }
@@ -112,7 +116,8 @@ export function Messages({ user, notify, reload, selected, setSelected }) {
           setHasMore(r.has_more);
           cursor.current = r.messages[0];
         }
-        await api(`/conversations/${selected}/read`, { method: "POST" });
+        if (document.visibilityState === "visible" && document.hasFocus())
+          await api(`/conversations/${selected}/read`, { method: "POST" });
       } catch (e) {
         if (active) {
           setError(e.message);
@@ -175,7 +180,11 @@ export function Messages({ user, notify, reload, selected, setSelected }) {
       body: text.trim(),
     };
     setPending(attempt);
-    sessionStorage.setItem(pendingKey, JSON.stringify(attempt));
+    try {
+      sessionStorage.setItem(pendingKey, JSON.stringify(attempt));
+    } catch {
+      /* In-memory retries still preserve the idempotency key. */
+    }
     setBusy(true);
     setError("");
     try {
@@ -187,7 +196,11 @@ export function Messages({ user, notify, reload, selected, setSelected }) {
       setMessages((m) => merge(m, [r.message]));
       setText("");
       setPending(null);
-      sessionStorage.removeItem(pendingKey);
+      try {
+        sessionStorage.removeItem(pendingKey);
+      } catch {
+        /* Storage may be unavailable. */
+      }
       reload();
       requestAnimationFrame(() =>
         end.current?.scrollIntoView({ block: "end" }),

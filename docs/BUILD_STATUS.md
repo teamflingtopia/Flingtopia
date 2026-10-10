@@ -1,5 +1,15 @@
 # Build status
 
+## October 10, 2026 first-release implementation and validation
+
+Implemented a dedicated existing-account social linking screen, explicit signed-in redirects, resumable onboarding with step validation, clearer public-profile visibility and passwordless account-request guidance. Fixed an Experiences render-time scope error. Inbox sorting now follows recent messages; inactive tabs do not mark messages read, and blocked browser storage does not prevent sending. Account, profile and chat styling now follows the shared dark theme.
+
+Validation: all 42 automated tests passed and the production build/type check passed. Tests use isolated PGlite databases and simulated, signed Google identity responses; they cover immediate new-user sessions, returning users, ownership-confirmed linking, invalid nonce/email, browser binding, replay, age eligibility and authentication-disabled mode. Frontend rendering checks cover public routes, auth/linking, onboarding, experiences, profile, settings and inbox. Local browser checks confirmed demo entry, free RSVP under My plans, message acceptance and message persistence after reload. Demo records exist only in the isolated preview, not as real public events.
+
+The user has no real events ready. Keep the hosted event directory empty until staff publish genuine events. Staff/support ownership remains outstanding. Live Google end-to-end acceptance, Apple setup, approved policies/retention, and operational launch checks remain open. Messaging uses polling; typing indicators and push delivery are not implemented. Actual deletion stays disabled.
+
+This change requires no new migration. Staging migrations 001–006 were previously applied; earlier migration-pending notes below are historical. No hosted settings were changed during this implementation. Hosted authentication remains disabled until explicitly re-enabled for live acceptance. This is not a production-readiness sign-off.
+
 ## October 10, 2026 temporary public browsing
 
 At the user's request, authentication is disabled by default. `APP_AUTH_ENABLED=true` explicitly restores it; unset/false uses public browsing. All visitors, including browsers with old sessions, see Explore without login/signup/onboarding. Google/Apple callback links redirect to Explore. Login, registration, recovery, refresh and verification writes return AUTH_DISABLED; logout remains available. Authenticated API/media/staff operations are unavailable while disabled, rather than exposing private accounts to anonymous visitors. Public people/creator/event previews and search remain available.

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.ts";
-export function AccountRequests({ enabled }) {
+export function AccountRequests({ enabled, user }) {
   const [requests, setRequests] = useState([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -42,69 +42,81 @@ export function AccountRequests({ enabled }) {
         </p>
       )}
       {message && <p role="status">{message}</p>}
-      <form
-        className="stack"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const form = e.currentTarget,
-            password = new FormData(form).get("password"),
-            action = e.nativeEvent.submitter.value;
-          setBusy(true);
-          setError("");
-          try {
-            if (action === "export") {
-              const r = await api("/me/export", {
-                method: "POST",
-                body: { password },
-              });
-              const url = URL.createObjectURL(
-                new Blob([JSON.stringify(r, null, 2)], {
-                  type: "application/json",
-                }),
-              );
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "flingtopia-account.json";
-              a.click();
-              setTimeout(() => URL.revokeObjectURL(url), 1000);
-              setMessage("Your account JSON download is ready.");
-            } else {
-              const r = await api("/me/deletion-request", {
-                method: "POST",
-                body: { password },
-              });
-              setMessage(r.message);
+      {user?.has_password === false ? (
+        <div className="notice">
+          <p>
+            You use social sign-in. Set an account password by email before
+            exporting data or requesting deletion.
+          </p>
+          <a className="button outline" href="#forgot-password">
+            Set an account password
+          </a>
+        </div>
+      ) : (
+        <form
+          className="stack"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget,
+              password = new FormData(form).get("password"),
+              action = e.nativeEvent.submitter?.value || "export";
+            setBusy(true);
+            setError("");
+            try {
+              if (action === "export") {
+                const r = await api("/me/export", {
+                  method: "POST",
+                  body: { password },
+                });
+                const url = URL.createObjectURL(
+                  new Blob([JSON.stringify(r, null, 2)], {
+                    type: "application/json",
+                  }),
+                );
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "flingtopia-account.json";
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                setMessage("Your account JSON download is ready.");
+              } else {
+                const r = await api("/me/deletion-request", {
+                  method: "POST",
+                  body: { password },
+                });
+                setMessage(r.message);
+              }
+              form.reset();
+              await load();
+            } catch (e) {
+              setError(e.message);
+            } finally {
+              setBusy(false);
             }
-            form.reset();
-            await load();
-          } catch (e) {
-            setError(e.message);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <label>
-          Confirm current password
-          <input
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            maxLength={256}
-          />
-        </label>
-        <button className="button outline" value="export" disabled={busy}>
-          Download my account JSON
-        </button>
-        <button
-          className="button outline danger"
-          value="deletion"
-          disabled={busy || !!pending}
+          }}
         >
-          Request deletion review
-        </button>
-      </form>
+          <label>
+            Confirm current password
+            <input
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              maxLength={256}
+            />
+          </label>
+          <button className="button outline" value="export" disabled={busy}>
+            Download my account JSON
+          </button>
+          <button
+            className="button outline danger"
+            value="deletion"
+            disabled={busy || !!pending}
+          >
+            Request deletion review
+          </button>
+        </form>
+      )}
       {pending && (
         <div className="notice">
           <p>

@@ -204,7 +204,9 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
                 ? "Watch, chat and connect with creators. Live streaming is coming soon."
                 : authDisabled
                   ? "Account features are temporarily unavailable. Keep exploring people and experiences."
-                  : "Sign in to connect with the community."}
+                  : user
+                    ? "You’re signed in. Complete your profile before connecting with the community."
+                    : "Sign in to connect with the community."}
             </p>
             {!authDisabled && (
               <a

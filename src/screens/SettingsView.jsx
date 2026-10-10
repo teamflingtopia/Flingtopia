@@ -104,8 +104,8 @@ export function SettingsView({ user, notify, onLogout, operations }) {
           <strong>{user.role}</strong>
         </div>
         <p className="muted small">
-          Use only fictional personal details in this development preview.
-          Retention and irreversible account deletion await approved policies.
+          Account deletion is not yet available. You can request a review or
+          hide your profile while retention rules are finalized.
         </p>
         <button className="button outline" onClick={onLogout}>
           <LogOut size={17} />
@@ -130,7 +130,7 @@ export function SettingsView({ user, notify, onLogout, operations }) {
           </div>
         ))}
       </section>
-      <AccountRequests enabled={operations?.account_requests} />
+      <AccountRequests user={user} enabled={operations?.account_requests} />
     </section>
   );
 }

@@ -2,7 +2,9 @@
 
 ## Release status
 
-Google sign-in and migration 004 are deployed. The immediate sign-in update is implemented locally and requires migration 005 before deployment. No automated tests or live provider sign-in checks have been run for this update. Keep Render automatic deploy disabled until migration 005 is applied.
+Staging migrations 001–006 have been applied and Render automatic deploy is enabled. Authentication is currently disabled by configuration; deploying code alone does not re-enable it. The October 10 update needs no new migration. Seven isolated social-auth tests pass using signed simulated Google responses. Live Google acceptance and Apple configuration remain pending.
+
+When authentication is enabled, new and returning social users enter `#discover` with an application session. Profile completion is a separate signed-in journey, not registration. Only an existing email collision uses `#social-complete`: its dedicated screen explains account linking and requests the existing account password once. It does not ask users to register again. After successful linking, the app opens Discover. Expired flows offer a fresh sign-in; do not reuse old Google authorization URLs.
 
 ## Account behavior
 

@@ -200,7 +200,11 @@ export function Profile({ user, setUser, notify }) {
               name="profile_visible"
               defaultChecked={initial.profile_visible}
             />
-            <span>Show my profile in discovery</span>
+            <span>
+              Show my profile in discovery. Visitors can see my name, city and
+              interests; photos remain available only to eligible signed-in
+              members.
+            </span>
           </label>
           <button className="button primary" disabled={busy}>
             {busy ? "Saving…" : "Save profile"}

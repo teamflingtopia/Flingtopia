@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Brand } from "../components/ui.tsx";
 import { api } from "../api.ts";
 import { policies } from "../../shared/policies.ts";
 export function Onboarding({
@@ -18,7 +19,12 @@ export function Onboarding({
     profile_visible: user.profile_visible,
     step: "profile",
     ...user.onboarding_draft,
-    ...(user.needs_demographics ? { dob: user.onboarding_draft?.dob || '', gender: user.onboarding_draft?.gender || '' } : {}),
+    ...(user.needs_demographics
+      ? {
+          dob: user.onboarding_draft?.dob || "",
+          gender: user.onboarding_draft?.gender || "",
+        }
+      : {}),
   }));
   const [interestText, setInterestText] = useState(draft.interests.join(", "));
   const [status, setStatus] = useState(""),
@@ -37,8 +43,10 @@ export function Onboarding({
     const request = queue.current
       .catch(() => {})
       .then(() => api("/me/onboarding", { method: "PATCH", body: value }))
-      .then(result => {
-        setUser(previous => previous ? { ...previous, onboarding_draft: value } : previous);
+      .then((result) => {
+        setUser((previous) =>
+          previous ? { ...previous, onboarding_draft: value } : previous,
+        );
         return result;
       });
     queue.current = request;
@@ -92,8 +100,10 @@ export function Onboarding({
           },
         });
         setUser(r.user);
-        location.hash = 'discover';
-        notify("Your profile is ready. Start exploring.");
+        location.hash = "profile";
+        notify(
+          "Your profile is ready. Add a photo for moderator review, or start exploring.",
+        );
       }
     } catch (e) {
       setError(e.message);
@@ -103,10 +113,14 @@ export function Onboarding({
   }
   const steps = ["profile", "preferences", "review"];
   return (
-    <section className="settings-card stack onboarding-card">
+    <section className="settings-card stack onboarding-card account-flow">
+      <Brand />
       <span className="eyebrow">WELCOME TO FLINGTOPIA</span>
-      <h1>Make room for connection.</h1>
-      <a href="#discover" className="text-button">Explore first →</a>
+      <h1>You’re signed in.</h1>
+      <p>Add a few details before connecting. No new password is needed.</p>
+      <a href="#discover" className="text-button">
+        Explore first →
+      </a>
       <p>
         Your progress is saved to your account. You can return after signing in
         on another device.
@@ -158,12 +172,33 @@ export function Onboarding({
       >
         {draft.step === "profile" && (
           <>
-            {user.needs_demographics && <>
-              <label>Date of birth<input type="date" value={draft.dob} onChange={e=>change({dob:e.target.value})} required /></label>
-              <label>Gender<select value={draft.gender} onChange={e=>change({gender:e.target.value})} required>
-                <option value="">Choose your gender</option><option value="woman">Woman</option><option value="man">Man</option><option value="nonbinary">Non-binary</option><option value="custom">Self-described</option>
-              </select></label>
-            </>}
+            {user.needs_demographics && (
+              <>
+                <label>
+                  Date of birth
+                  <input
+                    type="date"
+                    value={draft.dob}
+                    onChange={(e) => change({ dob: e.target.value })}
+                    required
+                  />
+                </label>
+                <label>
+                  Gender
+                  <select
+                    value={draft.gender}
+                    onChange={(e) => change({ gender: e.target.value })}
+                    required
+                  >
+                    <option value="">Choose your gender</option>
+                    <option value="woman">Woman</option>
+                    <option value="man">Man</option>
+                    <option value="nonbinary">Non-binary</option>
+                    <option value="custom">Self-described</option>
+                  </select>
+                </label>
+              </>
+            )}
             <label>
               Display name
               <input
@@ -236,7 +271,9 @@ export function Onboarding({
                 checked={draft.profile_visible}
                 onChange={(e) => change({ profile_visible: e.target.checked })}
               />
-              Show my completed profile in discovery
+              Show my completed profile in discovery. Visitors can see my name,
+              city and interests. Photos remain available only to eligible
+              signed-in members.
             </label>
           </>
         )}
@@ -285,9 +322,21 @@ export function Onboarding({
           <button
             type="button"
             className="button outline"
-            onClick={() =>
-              change({ step: steps[steps.indexOf(draft.step) + 1] })
-            }
+            disabled={busy}
+            onClick={async (e) => {
+              if (!e.currentTarget.form.reportValidity()) return;
+              setBusy(true);
+              setError("");
+              try {
+                await persist(current.current);
+                dirty.current = false;
+                change({ step: steps[steps.indexOf(draft.step) + 1] });
+              } catch (e) {
+                setError(e.message);
+              } finally {
+                setBusy(false);
+              }
+            }}
           >
             Continue
           </button>

@@ -21,7 +21,7 @@ test("legacy baseline adopts all migrations without losing existing data", async
     await applyMigrations(db);
     await assertMigrated(db);
     await applyMigrations(db);
-    assert.equal((await migrationStatus(db)).applied.length, 3);
+    assert.equal((await migrationStatus(db)).applied.length, 6);
     assert.equal(
       (await db.query("SELECT value FROM legacy_probe")).rows[0].value,
       "preserved",

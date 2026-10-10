@@ -12,29 +12,32 @@ import { api } from "../api.ts";
 
 import { Brand } from "../components/ui.tsx";
 
-export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = [] }) {
-  const [social, setSocial] = useState(null);
-  const [mode, setMode] = useState(location.hash === '#signup' ? 'register' : 'login'),
+export function Auth({
+  demo,
+  onAuth,
+  notify,
+  emailDisabled,
+  socialProviders = [],
+}) {
+  const [mode, setMode] = useState(
+      location.hash === "#signup" ? "register" : "login",
+    ),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState(location.hash === '#social-error' ? 'Social sign-in could not be completed. Please try again.' : '');
-  useEffect(() => {
-    if (location.hash === '#social-complete') {
-      api('/auth/social/pending').then(p => {
-        if (!p.existing_account) throw new Error('Please restart Google or Apple sign-in. Your earlier sign-in attempt has expired.');
-        setSocial(p); setMode('login');
-      }).catch(e => setError(e.message));
-    }
-  }, []);
+    [error, setError] = useState(
+      location.hash === "#social-error"
+        ? "Social sign-in could not be completed. Please restart sign-in rather than reusing an old Google link."
+        : "",
+    );
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError("");
     const f = Object.fromEntries(new FormData(e.currentTarget));
     try {
-      const r = await api(social ? '/auth/social/complete' : `/auth/${mode}`, {
+      const r = await api(`/auth/${mode}`, {
         method: "POST",
         body:
-          social?.existing_account ? { existing_password: f.password } : mode === "register"
+          mode === "register"
             ? {
                 ...f,
                 terms: f.terms === "on",
@@ -42,11 +45,10 @@ export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = []
               }
             : f,
       });
-      if (social) location.hash = '';
       onAuth(r.user);
       if (r.development_verification_url)
         sessionStorage.setItem("ft-dev-verify", r.development_verification_url);
-      if (mode === "register" && !social)
+      if (mode === "register")
         notify(
           r.email_sent === false
             ? r.message
@@ -110,7 +112,9 @@ export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = []
       <div className="auth-form-panel">
         <div className="auth-form-wrap">
           <span className="pill peach">LET'S FIND YOUR PEOPLE</span>
-          <a className="text-button" href="#discover">Explore as a guest →</a>
+          <a className="text-button" href="#discover">
+            Explore as a guest →
+          </a>
           <h2>
             {mode === "login" ? "Welcome back." : "Make yourself at home."}
           </h2>
@@ -119,15 +123,25 @@ export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = []
               ? "Your next connection could be one hello away."
               : "A few details, and you’re on your way."}
           </p>
+          {socialProviders.length > 0 && (
+            <div className="stack" style={{ marginTop: "1rem" }}>
+              <p className="muted">Sign in with your existing social account</p>
+              {socialProviders.map((provider) => (
+                <a
+                  key={provider}
+                  className="button outline full"
+                  href={`/api/v1/auth/social/${provider}/start`}
+                >
+                  Continue with {provider === "google" ? "Google" : "Apple"}
+                </a>
+              ))}
+            </div>
+          )}
           <form onSubmit={submit} className="stack">
-            {social && <p className="muted">An account already uses this email. Enter its password to link your social sign-in.</p>}
             <label>
               Email address
               <input
                 name="email"
-                defaultValue={social?.email || ''}
-                key={social?.email || 'email'}
-                readOnly={!!social}
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
@@ -218,36 +232,33 @@ export function Auth({ demo, onAuth, notify, emailDisabled, socialProviders = []
                 <LoaderCircle className="spin" size={18} />
               ) : (
                 <>
-                  {social?.existing_account ? 'Link account and sign in' : mode === "login" ? "Sign in" : "Create account"}
+                  {mode === "login" ? "Sign in" : "Create account"}
                   <ArrowRight size={18} />
                 </>
               )}
             </button>
           </form>
-          {!social && socialProviders.length > 0 && <div className="stack" style={{marginTop: '1rem'}}>
-            <p className="muted">Or continue with</p>
-            {socialProviders.map(provider => <a key={provider} className="button outline full" href={`/api/v1/auth/social/${provider}/start`}>Continue with {provider === 'google' ? 'Google' : 'Apple'}</a>)}
-          </div>}
-          {social && <a className="text-button" href="/">Cancel social sign-in</a>}
           {mode === "login" && !emailDisabled && (
             <a className="text-button" href="#forgot-password">
               Forgot password?
             </a>
           )}
-          {!social && <p className="switch-auth">
-            {mode === "login"
-              ? "New around here?"
-              : "Already part of the community?"}{" "}
-            <button
-              className="text-button"
-              onClick={() => {
-                setMode(mode === "login" ? "register" : "login");
-                setError("");
-              }}
-            >
-              {mode === "login" ? "Create an account" : "Sign in"}
-            </button>
-          </p>}
+          {true && (
+            <p className="switch-auth">
+              {mode === "login"
+                ? "New around here?"
+                : "Already part of the community?"}{" "}
+              <button
+                className="text-button"
+                onClick={() => {
+                  setMode(mode === "login" ? "register" : "login");
+                  setError("");
+                }}
+              >
+                {mode === "login" ? "Create an account" : "Sign in"}
+              </button>
+            </p>
+          )}
           {demo && (
             <div className="demo-entry">
               <span>EXPLORE THE LOCAL PREVIEW</span>

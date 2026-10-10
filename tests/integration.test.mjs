@@ -50,6 +50,7 @@ before(async () => {
   const password = await bcrypt.hash("Test-password-1234", 12);
   await db.query("UPDATE users SET password_hash=$1", [password]);
   const app = createApp(db, {
+    authEnabled: true,
     secret: "test-only-secret-that-is-at-least-thirty-two-characters",
     origin,
     demo: true,

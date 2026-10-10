@@ -15,7 +15,7 @@ export function registerMessages(app, context) {
     async (req, res) => {
       const rows = (
         await db.query(
-          `SELECT m.id AS match_id,m.created_at AS matched_at,u.*, (SELECT body FROM messages WHERE match_id=m.id ORDER BY created_at DESC,id DESC LIMIT 1) AS last_message, (SELECT count(*)::int FROM messages WHERE match_id=m.id AND sender_id<>$1 AND read_at IS NULL) AS unread FROM matches m JOIN users u ON u.id=CASE WHEN m.user_a=$1 THEN m.user_b ELSE m.user_a END WHERE (m.user_a=$1 OR m.user_b=$1) AND m.active=true AND u.status='active' AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.user_id=$1 AND b.target_id=u.id) OR (b.target_id=$1 AND b.user_id=u.id)) ORDER BY m.created_at DESC`,
+          `SELECT m.id AS match_id,m.created_at AS matched_at,u.*, (SELECT body FROM messages WHERE match_id=m.id ORDER BY created_at DESC,id DESC LIMIT 1) AS last_message, (SELECT count(*)::int FROM messages WHERE match_id=m.id AND sender_id<>$1 AND read_at IS NULL) AS unread FROM matches m JOIN users u ON u.id=CASE WHEN m.user_a=$1 THEN m.user_b ELSE m.user_a END WHERE (m.user_a=$1 OR m.user_b=$1) AND m.active=true AND u.status='active' AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.user_id=$1 AND b.target_id=u.id) OR (b.target_id=$1 AND b.user_id=u.id)) ORDER BY COALESCE((SELECT max(created_at) FROM messages WHERE match_id=m.id),m.created_at) DESC,m.id DESC`,
           [req.user.id],
         )
       ).rows;

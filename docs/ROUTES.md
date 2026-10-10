@@ -1,5 +1,13 @@
 # Release 1 navigation and entity contract
 
+## October 10 routing update
+
+Public `#home`, `#browse`/`#discover`, `#creators`, `#experiences`, `#search` and entity previews use visitor-safe data. `#live` is an explicit unavailable/coming-soon destination, not a streaming feature. Private actions remain server-authorized. When authentication is disabled, even old sessions remain in public browsing.
+
+When enabled, social sign-in enters Discover immediately. `#social-complete` is exclusively an existing-account ownership/linking screen; ordinary signup is never rendered there. Authenticated visits to sign-in/signup/social callback screens redirect to Discover (or the staff workspace). Incomplete members can browse and complete their saved profile before protected interactions. `#browse` also works for signed-in members. Completed onboarding opens the profile/photo workspace.
+
+Local browser acceptance confirmed free-event RSVP/My plans and conversation reload. Automated rendering covers public routes and main member screens; a full hosted/device accessibility audit is still pending. The older M2 description below records the original routing foundation.
+
 ## Current routing (M2)
 
 `src/routing.ts` centralizes hash routing. M2 implements the entity routes below, plus `#forgot-password` and `#reset-password?token=...`. Unknown or structurally invalid routes show an unavailable page. Authentication preserves the current destination; incomplete real accounts pass through saved onboarding before accessing it. Backend authorization remains authoritative.

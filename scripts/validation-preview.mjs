@@ -14,6 +14,7 @@ await seed(db);
 const password = await bcrypt.hash("Test-password-1234", 12);
 await db.query("UPDATE users SET password_hash=$1", [password]);
 const config = {
+  authEnabled: true,
   secret: "disposable-browser-validation-secret-32-characters",
   origin: "http://127.0.0.1:4199",
   demo: true,

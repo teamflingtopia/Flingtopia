@@ -26,7 +26,9 @@ This document records the user's approval to proceed with the five recommendatio
 8. Block/report → staff review → appropriate resolution and audit record.
 9. Access privacy/account controls → request export or deletion with defined processing rules.
 
-Staff need controlled account provisioning, MFA, report/photo review, suspension and event publishing/cancellation. Real events cannot rely on SQL seed edits as their operating workflow. The permission model and organizer/staff responsibilities must be specified before implementing event management.
+Staff tooling implements controlled access, MFA, report/photo review, suspension and free-event publishing/cancellation. Real events must be published through those tools. Staff/support account ownership and response responsibilities still need to be assigned before launch.
+
+October 10 content decision: the owner has no genuine events ready. Ship an honest empty event directory until a real event is available. Fictional events are restricted to isolated development/test fixtures. The first release does not require invented listings.
 
 ## Deferred product scope
 

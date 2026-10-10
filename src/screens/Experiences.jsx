@@ -34,20 +34,6 @@ export function Experiences({ user, notify, reload }) {
       .finally(() => {
         if (active) setLoading(false);
       });
-    const show = (e) =>
-      filter === "mine"
-        ? e.attending || !!e.rsvp_cancelled_at
-        : e.status === "published" && new Date(e.starts_at) > new Date();
-    const state = (e) =>
-      e.status === "cancelled"
-        ? "Event cancelled"
-        : e.rsvp_cancelled_at
-          ? "Your RSVP cancelled"
-          : new Date(e.starts_at) <= new Date()
-            ? "Past experience"
-            : e.attending
-              ? "You’re on the list"
-              : "Upcoming";
     return () => {
       active = false;
     };
@@ -59,6 +45,20 @@ export function Experiences({ user, notify, reload }) {
     replaceFilters({ filter });
     if (!loading) restoreListView();
   }, [filter, loading]);
+  const show = (e) =>
+    filter === "mine"
+      ? e.attending || !!e.rsvp_cancelled_at
+      : e.status === "published" && new Date(e.starts_at) > new Date();
+  const state = (e) =>
+    e.status === "cancelled"
+      ? "Event cancelled"
+      : e.rsvp_cancelled_at
+        ? "Your RSVP cancelled"
+        : new Date(e.starts_at) <= new Date()
+          ? "Past experience"
+          : e.attending
+            ? "You’re on the list"
+            : "Upcoming";
   return (
     <section>
       <div className="page-heading">

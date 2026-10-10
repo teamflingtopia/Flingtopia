@@ -31,6 +31,7 @@ import { api } from "../api.ts";
 
 import { Avatar, Brand, Spinner, Empty } from "../components/ui.tsx";
 import { routeNames, getRoute, navigate, fmtDate } from "../routing.ts";
+import { SocialLink } from "./SocialLink.jsx";
 import { Auth } from "./Auth.jsx";
 import { Guest } from "./Guest.jsx";
 import { Search as GlobalSearch } from "./Search.jsx";
@@ -53,6 +54,21 @@ export function App() {
     [events, setEvents] = useState([]),
     [destination, setDestination] = useState(location.hash);
   const entityId = getEntityId();
+  useEffect(() => {
+    if (!user) return;
+    const current = location.hash.slice(1).split("?")[0];
+    if (
+      [
+        "signin",
+        "signup",
+        "social-complete",
+        "social-error",
+        "onboarding",
+      ].includes(current) &&
+      (current !== "onboarding" || user.onboarding_completed)
+    )
+      navigate(user.staff_role ? "moderation" : "discover");
+  }, [user?.id, user?.onboarding_completed, destination]);
   useEffect(() => {
     if (
       config?.auth_enabled === false &&
@@ -367,6 +383,8 @@ export function App() {
             setEvents([]);
           }}
         />
+      ) : !user && location.hash.split("?")[0] === "#social-complete" ? (
+        <SocialLink onAuth={setUser} />
       ) : !user &&
         !["signin", "signup", "social-complete", "social-error"].includes(
           location.hash.slice(1).split("?")[0],
@@ -581,7 +599,7 @@ export function App() {
               tabIndex={-1}
               className={`main-content ${route === "messages" ? "message-main" : ""}`}
             >
-              {(route === "discover" || route === "creators") && (
+              {["discover", "browse", "creators"].includes(route) && (
                 <div className="discovery-layout">
                   <section className="discovery-main">
                     <div className="page-heading">
@@ -741,6 +759,12 @@ export function App() {
                   id={entityId}
                   onChat={openChat}
                 />
+              )}
+              {route === "live" && (
+                <Empty title="Live Discovery">
+                  Live streaming is coming soon.{" "}
+                  <a href="#creators">Discover creators</a>
+                </Empty>
               )}
               {route === "unavailable" && (
                 <Empty
