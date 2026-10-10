@@ -58,6 +58,10 @@ export function App() {
       config?.auth_enabled === false &&
       ![
         "discover",
+        "browse",
+        "live",
+        "messages",
+        "profile",
         "creators",
         "experiences",
         "search",
@@ -165,6 +169,10 @@ export function App() {
           setUser(null);
           const publicRoutes = [
             "discover",
+            "browse",
+            "live",
+            "messages",
+            "profile",
             "creators",
             "experiences",
             "search",
@@ -333,6 +341,10 @@ export function App() {
           route={
             [
               "discover",
+              "browse",
+              "live",
+              "messages",
+              "profile",
               "creators",
               "experiences",
               "search",

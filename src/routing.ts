@@ -1,4 +1,6 @@
 export const routeNames = {
+  browse: "People",
+  live: "Live Discovery",
   search: "Search",
   onboarding: "Complete profile",
   signin: "Sign in",
@@ -67,7 +69,7 @@ export function backToList(fallback: string) {
   const from = routeQuery().get("from");
   const safe =
     from &&
-    /^(discover|creators|experiences|search|messages(?:\/[a-f0-9-]{36})?)(\?[^#]*)?$/.test(
+    /^(discover|browse|creators|experiences|search|messages(?:\/[a-f0-9-]{36})?)(\?[^#]*)?$/.test(
       from,
     )
       ? from

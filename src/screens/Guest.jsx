@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { api } from "../api.ts";
+import {
+  Users,
+  Star,
+  Radio,
+  MessageCircle,
+  UserRound,
+  Search as SearchIcon,
+} from "lucide-react";
+import { PublicHome, PublicArtwork } from "./PublicHome.jsx";
 import { Brand } from "../components/ui.tsx";
 import {
   fmtDate,
@@ -16,7 +25,7 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
   const isEvent = route === "experiences" || route === "events";
   const creators = route === "creators";
   const browsing = [
-    "discover",
+    "browse",
     "creators",
     "experiences",
     "people",
@@ -113,38 +122,13 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
       </a>
       <header className="guest-header">
         <Brand />
-        <nav aria-label="Explore navigation">
-          <a
-            href="#discover"
-            aria-current={route === "discover" ? "page" : undefined}
-          >
-            People
-          </a>
-          <a href="#creators" aria-current={creators ? "page" : undefined}>
-            Creators
-          </a>
-          <a href="#experiences" aria-current={isEvent ? "page" : undefined}>
-            Experiences
-          </a>
-          <a
-            href="#search"
-            aria-current={route === "search" ? "page" : undefined}
-          >
-            Search
-          </a>
-          <button
-            className="text-button"
-            onClick={() => requireAccount("send messages")}
-          >
-            Messages
-          </button>
-          <button
-            className="text-button"
-            onClick={() => requireAccount("create content")}
-          >
-            Create
-          </button>
-        </nav>
+        <a
+          className="guest-search-icon"
+          href="#search"
+          aria-label="Search Flingtopia"
+        >
+          <SearchIcon size={18} />
+        </a>
         <div className="guest-actions">
           {authDisabled ? null : user ? (
             <>
@@ -193,43 +177,64 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
             </div>
           </section>
         )}
-        {route === "search" ? (
+        {route === "discover" ? (
+          <PublicHome authDisabled={authDisabled} />
+        ) : route === "search" ? (
           <Search publicOnly user={user} />
         ) : !browsing ? (
-          <section className="guest-empty">
+          <section className="guest-empty guest-feature-page">
+            {route === "live" ? (
+              <Radio size={36} />
+            ) : route === "messages" ? (
+              <MessageCircle size={36} />
+            ) : (
+              <UserRound size={36} />
+            )}
             <h1>
-              {route === "unavailable"
-                ? "Page unavailable"
-                : "Sign in to continue"}
+              {route === "live"
+                ? "Live Discovery"
+                : route === "messages"
+                  ? "Messages"
+                  : route === "profile"
+                    ? "Your profile"
+                    : "Page unavailable"}
             </h1>
             <p>
-              {user
-                ? "Complete your profile to access this area."
-                : "This area requires an account."}
+              {route === "live"
+                ? "Watch, chat and connect with creators. Live streaming is coming soon."
+                : authDisabled
+                  ? "Account features are temporarily unavailable. Keep exploring people and experiences."
+                  : "Sign in to connect with the community."}
             </p>
-            <a
-              className="button primary"
-              href={user ? "#onboarding" : "#signin"}
-            >
-              {user ? "Complete profile" : "Sign in"}
-            </a>
-            <a className="text-button" href="#discover">
-              Explore people
+            {!authDisabled && (
+              <a
+                className="button primary"
+                href={user ? "#onboarding" : "#signin"}
+              >
+                {user ? "Complete profile" : "Sign in"}
+              </a>
+            )}
+            <a className="button outline" href="#discover">
+              Keep exploring
             </a>
           </section>
         ) : (
           <>
-            <span className="eyebrow">EXPLORE FLINGTOPIA</span>
+            <a className="guest-back" href="#discover">
+              ← Home
+            </a>
             <h1>
               {isEvent
-                ? "Find your next shared experience."
+                ? "Experiences Marketplace"
                 : creators
-                  ? "Discover creators who share what you love."
-                  : "Good connections start with curiosity."}
+                  ? "Discover Creators"
+                  : "People"}
             </h1>
             <p className="muted">
               {authDisabled
-                ? "Explore people, creators, and experiences. No account needed."
+                ? isEvent
+                  ? "Discover unique experiences and create memories together."
+                  : "Find and connect with amazing people who share your vibe."
                 : user
                   ? "You’re signed in. Explore now, then complete your age, profile, and consent details before connecting."
                   : "Browse as a guest. Join to connect, message, and take part."}
@@ -238,7 +243,7 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
             {detail ? (
               <button
                 className="text-button"
-                onClick={() => backToList(isEvent ? "experiences" : "discover")}
+                onClick={() => backToList(isEvent ? "experiences" : "browse")}
               >
                 ← Back to results
               </button>
@@ -256,6 +261,23 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
                   }
                 />
               </label>
+            )}
+            {!detail && !isEvent && (
+              <div className="guest-chips">
+                <a className={!creators ? "active" : ""} href="#browse">
+                  All people
+                </a>
+                <a className={creators ? "active" : ""} href="#creators">
+                  Creators
+                </a>
+              </div>
+            )}
+            {!detail && isEvent && (
+              <section className="guest-feature-banner">
+                <Star />
+                <h2>Make it unforgettable.</h2>
+                <p>Explore shared experiences and create memories that last.</p>
+              </section>
             )}
             {loading && <p role="status">Loading…</p>}
             {error && (
@@ -287,11 +309,21 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
                 )}
               </section>
             )}
-            <div className="guest-grid">
+            <div
+              className={
+                "guest-grid " +
+                (detail
+                  ? "guest-detail"
+                  : isEvent
+                    ? "guest-events"
+                    : "guest-people")
+              }
+            >
               {items.map((item) => (
                 <article className="guest-card" key={item.id}>
                   {isEvent ? (
                     <>
+                      <PublicArtwork kind="event" src={item.image_url} />
                       <span className="pill peach">{item.category}</span>
                       <h2>{item.title}</h2>
                       <p>
@@ -310,9 +342,7 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
                     </>
                   ) : (
                     <>
-                      <div className="guest-avatar" aria-hidden="true">
-                        {item.display_name.slice(0, 1)}
-                      </div>
+                      <PublicArtwork />
                       <h2>{item.display_name}</h2>
                       <p>{item.city}</p>
                       <div className="guest-interests">
@@ -322,7 +352,9 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
                           </span>
                         ))}
                       </div>
-                      <p className="muted">Limited public profile preview</p>
+                      {detail && (
+                        <p className="muted">Limited public profile preview</p>
+                      )}
                     </>
                   )}
                   <div className="guest-actions">
@@ -335,35 +367,38 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
                         View {isEvent ? "experience" : "profile"}
                       </button>
                     )}
-                    {isEvent ? (
-                      <button
-                        className="button primary"
-                        onClick={() => requireAccount("book an experience")}
-                      >
-                        Join experience
-                      </button>
-                    ) : (
-                      <>
+                    {detail &&
+                      (isEvent ? (
                         <button
                           className="button primary"
-                          onClick={() => requireAccount("message this member")}
+                          onClick={() => requireAccount("book an experience")}
                         >
-                          Message
+                          Join experience
                         </button>
-                        <button
-                          className="button outline"
-                          onClick={() => requireAccount("like this profile")}
-                        >
-                          Like
-                        </button>
-                        <button
-                          className="text-button"
-                          onClick={() => requireAccount("follow this member")}
-                        >
-                          Follow
-                        </button>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <button
+                            className="button primary"
+                            onClick={() =>
+                              requireAccount("message this member")
+                            }
+                          >
+                            Message
+                          </button>
+                          <button
+                            className="button outline"
+                            onClick={() => requireAccount("like this profile")}
+                          >
+                            Like
+                          </button>
+                          <button
+                            className="text-button"
+                            onClick={() => requireAccount("follow this member")}
+                          >
+                            Follow
+                          </button>
+                        </>
+                      ))}
                   </div>
                 </article>
               ))}
@@ -380,6 +415,31 @@ export function Guest({ route, entityId, user, logout, authDisabled = false }) {
           </>
         )}
       </main>
+      <nav className="guest-bottom-nav" aria-label="Main navigation">
+        {[
+          ["browse", Users, "People"],
+          ["experiences", Star, "Experiences"],
+          ["live", Radio, "Live"],
+          ["messages", MessageCircle, "Messages"],
+          ["profile", UserRound, "Profile"],
+        ].map(([href, Icon, label]) => (
+          <a
+            key={href}
+            href={"#" + href}
+            aria-current={
+              route === href ||
+              (href === "browse" &&
+                ["discover", "creators", "people"].includes(route)) ||
+              (href === "experiences" && isEvent)
+                ? "page"
+                : undefined
+            }
+          >
+            <Icon size={21} />
+            <span>{label}</span>
+          </a>
+        ))}
+      </nav>
     </div>
   );
 }
