@@ -98,6 +98,7 @@ export interface ApiErrorBody {
 export interface ReadResponses {
   "/health": { status: "ok" };
   "/config": {
+    auth_enabled: boolean;
     demo: boolean;
     operations: {
       event_publisher_roles: ("admin" | "moderator")[];

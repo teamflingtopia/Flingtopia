@@ -12,7 +12,7 @@ import {
 import { Search } from "./Search.jsx";
 import "./Guest.css";
 
-export function Guest({ route, entityId, user, logout }) {
+export function Guest({ route, entityId, user, logout, authDisabled = false }) {
   const isEvent = route === "experiences" || route === "events";
   const creators = route === "creators";
   const browsing = [
@@ -91,9 +91,11 @@ export function Guest({ route, entityId, user, logout }) {
   }
   function requireAccount(action) {
     setPrompt(
-      user
-        ? `Complete your profile to ${action}.`
-        : `Sign in or create an account to ${action}.`,
+      authDisabled
+        ? `This feature is temporarily unavailable. Keep exploring people, creators, and experiences.`
+        : user
+          ? `Complete your profile to ${action}.`
+          : `Sign in or create an account to ${action}.`,
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -144,7 +146,7 @@ export function Guest({ route, entityId, user, logout }) {
           </button>
         </nav>
         <div className="guest-actions">
-          {user ? (
+          {authDisabled ? null : user ? (
             <>
               <span>Signed in as {user.display_name}</span>
               <a className="button primary" href="#onboarding">
@@ -171,7 +173,7 @@ export function Guest({ route, entityId, user, logout }) {
           <section className="guest-prompt" aria-label="Account required">
             <p role="status">{prompt}</p>
             <div className="guest-actions">
-              {user ? (
+              {authDisabled ? null : user ? (
                 <a className="button primary" href="#onboarding">
                   Complete profile
                 </a>
@@ -226,9 +228,11 @@ export function Guest({ route, entityId, user, logout }) {
                   : "Good connections start with curiosity."}
             </h1>
             <p className="muted">
-              {user
-                ? "You’re signed in. Explore now, then complete your age, profile, and consent details before connecting."
-                : "Browse as a guest. Join to connect, message, and take part."}
+              {authDisabled
+                ? "Explore people, creators, and experiences. No account needed."
+                : user
+                  ? "You’re signed in. Explore now, then complete your age, profile, and consent details before connecting."
+                  : "Browse as a guest. Join to connect, message, and take part."}
             </p>
 
             {detail ? (
@@ -267,16 +271,20 @@ export function Guest({ route, entityId, user, logout }) {
                     : "The community is growing."}
                 </h2>
                 <p>
-                  {user
-                    ? "Complete your profile while the community grows."
-                    : "Check back soon, or create an account to get started."}
+                  {authDisabled
+                    ? "Check back soon for more people and experiences."
+                    : user
+                      ? "Complete your profile while the community grows."
+                      : "Check back soon, or create an account to get started."}
                 </p>
-                <a
-                  href={user ? "#onboarding" : "#signup"}
-                  className="button primary"
-                >
-                  {user ? "Complete profile" : "Join Flingtopia"}
-                </a>
+                {!authDisabled && (
+                  <a
+                    href={user ? "#onboarding" : "#signup"}
+                    className="button primary"
+                  >
+                    {user ? "Complete profile" : "Join Flingtopia"}
+                  </a>
+                )}
               </section>
             )}
             <div className="guest-grid">

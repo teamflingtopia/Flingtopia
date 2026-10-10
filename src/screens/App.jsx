@@ -53,6 +53,20 @@ export function App() {
     [events, setEvents] = useState([]),
     [destination, setDestination] = useState(location.hash);
   const entityId = getEntityId();
+  useEffect(() => {
+    if (
+      config?.auth_enabled === false &&
+      ![
+        "discover",
+        "creators",
+        "experiences",
+        "search",
+        "people",
+        "events",
+      ].includes(route)
+    )
+      navigate("discover");
+  }, [config?.auth_enabled, route]);
   const selectedChat = entityId;
   const setSelectedChat = (id) =>
     id ? openDetail(`messages/${id}`) : navigate("messages");
@@ -145,7 +159,25 @@ export function App() {
   useEffect(() => {
     async function boot() {
       try {
-        setConfig(await api("/config"));
+        const settings = await api("/config");
+        setConfig(settings);
+        if (settings.auth_enabled === false) {
+          setUser(null);
+          const publicRoutes = [
+            "discover",
+            "creators",
+            "experiences",
+            "search",
+            "people",
+            "events",
+          ];
+          const target = publicRoutes.includes(getRoute())
+            ? location.hash || "#discover"
+            : "#discover";
+          history.replaceState(null, "", location.pathname + target);
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
+          return;
+        }
         const verify = new URLSearchParams(location.search).get("verify");
         if (verify) {
           try {
@@ -294,7 +326,25 @@ export function App() {
           available.
         </div>
       )}
-      {["forgot-password", "reset-password"].includes(route) ? (
+      {config?.auth_enabled === false ? (
+        <Guest
+          key={destination}
+          authDisabled
+          route={
+            [
+              "discover",
+              "creators",
+              "experiences",
+              "search",
+              "people",
+              "events",
+            ].includes(route)
+              ? route
+              : "discover"
+          }
+          entityId={entityId}
+        />
+      ) : ["forgot-password", "reset-password"].includes(route) ? (
         <Recovery
           emailDisabled={config?.email_disabled}
           key={destination}

@@ -298,6 +298,7 @@ add({
   tag: "System",
   public: true,
   response: object({
+    auth_enabled: bool,
     demo: bool,
     operations: object({
       event_publisher_roles: array({ enum: ["admin", "moderator"] }),
@@ -1184,7 +1185,10 @@ for (const isPublic of [false, true])
       next_events_cursor: nullable(id),
     }),
     parameters: [
-      { ...query("q", { type: "string", minLength: 2, maxLength: 100 }), required: true },
+      {
+        ...query("q", { type: "string", minLength: 2, maxLength: 100 }),
+        required: true,
+      },
       query("type", {
         enum: ["all", "people", "creators", "events", "experiences"],
         default: "all",

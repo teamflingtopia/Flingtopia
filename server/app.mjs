@@ -172,6 +172,14 @@ export function createApp(db, config) {
     setCookies(res, await sign(user.id, family), token);
   }
   const authenticated = async (req, res, next) => {
+    if (config.authEnabled !== true)
+      return next(
+        fail(
+          503,
+          "Account features are temporarily unavailable. You can explore Flingtopia without signing in.",
+          "AUTH_DISABLED",
+        ),
+      );
     try {
       const token = getCookies(req).ft_access;
       if (!token) throw 0;
@@ -314,7 +322,9 @@ export function createApp(db, config) {
       demo: config.demo,
       staging: !!config.staging,
       email_disabled: !!config.emailDisabled,
-      social_providers: socialProviders(config),
+      auth_enabled: config.authEnabled === true,
+      social_providers:
+        config.authEnabled === true ? socialProviders(config) : [],
       policies,
       operations: {
         event_publisher_roles: config.eventPublisherRoles || [],
@@ -324,6 +334,21 @@ export function createApp(db, config) {
     }),
   );
   registerPublic(app, { db, config });
+  app.use("/api/v1/auth", (req, res, next) => {
+    if (config.authEnabled === true || req.path === "/logout") return next();
+    if (
+      req.method === "GET" ||
+      (req.method === "POST" && req.path === "/social/apple/callback")
+    )
+      return res.redirect(303, `${config.origin}/#discover`);
+    next(
+      fail(
+        503,
+        "Sign-in and sign-up are temporarily disabled. Explore Flingtopia without an account.",
+        "AUTH_DISABLED",
+      ),
+    );
+  });
   registerSearch(app, { db, config, authenticated, verified });
   registerRecovery(app, { db, config, authLimit, one, audit, cookieOpts });
   const operations = {

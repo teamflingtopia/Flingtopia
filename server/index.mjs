@@ -18,7 +18,8 @@ try {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const production = process.env.NODE_ENV === "production";
 const staging = process.env.APP_ENV === "staging";
-const stagingPublicAccess = staging && process.env.STAGING_PUBLIC_ACCESS === "true";
+const stagingPublicAccess =
+  staging && process.env.STAGING_PUBLIC_ACCESS === "true";
 const emailDisabled = process.env.STAGING_DISABLE_EMAIL === "true";
 if (stagingPublicAccess && emailDisabled)
   throw new Error("Public staging requires email to be enabled.");
@@ -28,7 +29,9 @@ if (emailDisabled && !staging)
   );
 if (
   staging &&
-  (!production || (!stagingPublicAccess && (process.env.STAGING_ACCESS_PASSWORD || "").length < 24))
+  (!production ||
+    (!stagingPublicAccess &&
+      (process.env.STAGING_ACCESS_PASSWORD || "").length < 24))
 )
   throw new Error(
     "Staging requires NODE_ENV=production and STAGING_ACCESS_PASSWORD of at least 24 characters.",
@@ -90,14 +93,23 @@ if (
   );
 const port = Number(process.env.PORT || 4100);
 const appConfig = {
+  authEnabled: process.env.APP_AUTH_ENABLED === "true",
   secret,
   mfaSecret: process.env.MFA_ENCRYPTION_KEY || secret,
   production,
   staging,
   stagingPublicAccess,
   social: {
-    google: { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET },
-    apple: { clientId: process.env.APPLE_CLIENT_ID, teamId: process.env.APPLE_TEAM_ID, keyId: process.env.APPLE_KEY_ID, privateKey: process.env.APPLE_PRIVATE_KEY },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+    apple: {
+      clientId: process.env.APPLE_CLIENT_ID,
+      teamId: process.env.APPLE_TEAM_ID,
+      keyId: process.env.APPLE_KEY_ID,
+      privateKey: process.env.APPLE_PRIVATE_KEY,
+    },
   },
   emailDisabled,
   stagingAccessPassword: process.env.STAGING_ACCESS_PASSWORD,

@@ -82,6 +82,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "auth_enabled": {
+                      "type": "boolean"
+                    },
                     "demo": {
                       "type": "boolean"
                     },
@@ -174,6 +177,7 @@
                     }
                   },
                   "required": [
+                    "auth_enabled",
                     "demo",
                     "operations",
                     "policies",

@@ -1,5 +1,11 @@
 # Build status
 
+## October 10, 2026 temporary public browsing
+
+At the user's request, authentication is disabled by default. `APP_AUTH_ENABLED=true` explicitly restores it; unset/false uses public browsing. All visitors, including browsers with old sessions, see Explore without login/signup/onboarding. Google/Apple callback links redirect to Explore. Login, registration, recovery, refresh and verification writes return AUTH_DISABLED; logout remains available. Authenticated API/media/staff operations are unavailable while disabled, rather than exposing private accounts to anonymous visitors. Public people/creator/event previews and search remain available.
+
+Build and TypeScript compilation passed; behavioral tests were not run. This is a local change pending push/deployment. The previous migrations 005 and 006 are still prerequisites for deploying the current branch. Existing Google provider configuration can remain saved for later re-enabling. No hosted setting was changed in this turn.
+
 ## October 8, 2026 requirements revisit
 
 Re-read all three supplied specifications and compared them to the code and saved prototype navigation evidence. See the current requirements inventory at the top of ROADMAP.md.
